@@ -11,6 +11,7 @@ export const config = {
   LLM_API_KEY: (process.env.LLM_API_KEY || process.env.OPENAI_API_KEY || '').trim().replace(/[^\x20-\x7E]/g, ''),
   LLM_BASE_URL: process.env.LLM_BASE_URL || '',  // 留空则使用 OpenAI 官方接口
   LLM_SUPPORTS_VISION: process.env.LLM_SUPPORTS_VISION !== 'false',  // 默认 true，纯文本模型设为 false
+  LLM_DISABLE_THINKING: process.env.LLM_DISABLE_THINKING === 'true',  // true 时传 thinking:{type:'disabled'} 关闭推理模式
   DEFAULT_LLM_MODEL: process.env.DEFAULT_LLM_MODEL || 'moonshot-v1-8k',
 
   // 兼容旧变量名

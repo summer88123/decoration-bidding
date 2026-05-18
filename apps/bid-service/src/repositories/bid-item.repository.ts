@@ -13,8 +13,15 @@ export const BidItemRepository = {
   },
 
   createManyFromAI(bidId: string, documentId: string, items: BidItemFromAI[]) {
+    const validItems = items.filter(
+      (item) => item.itemName && typeof item.itemName === 'string' && item.itemName.trim(),
+    )
+    if (validItems.length !== items.length) {
+      console.warn(`[BidItemRepository] 过滤掉 ${items.length - validItems.length} 条无效条目（itemName 为空）`)
+    }
+    if (validItems.length === 0) return Promise.resolve({ count: 0 })
     return prisma.bidItem.createMany({
-      data: items.map((item, idx) => ({
+      data: validItems.map((item, idx) => ({
         bidId,
         documentId,
         itemName: item.itemName,
@@ -23,8 +30,8 @@ export const BidItemRepository = {
         unit: item.unit,
         costPrice: 0,
         sellPrice: 0,
-        drawingPage: item.region.page,
-        drawingRegion: JSON.stringify(item.region),
+        drawingPage: item.region?.page ?? null,
+        drawingRegion: item.region ? JSON.stringify(item.region) : null,
         sortOrder: idx,
       })),
     })

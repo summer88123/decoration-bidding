@@ -61,10 +61,15 @@ export const routes: FastifyPluginAsync = async (app) => {
       void (async () => {
         try {
           let count = 0
-          for await (const item of streamItems(pages, traceId)) {
-            send(item)
-            count++
-            req.log.info(`[parse-drawing/stream] 已提取第 ${count} 个条目: ${item.itemName}`)
+          for await (const ev of streamItems(pages, traceId)) {
+            if (ev.kind === 'progress') {
+              send({ type: 'page_progress', page: ev.page, total: ev.total })
+              req.log.info(`[parse-drawing/stream] 开始第 ${ev.page}/${ev.total} 页`)
+            } else {
+              send(ev.data)
+              count++
+              req.log.info(`[parse-drawing/stream] 已提取第 ${count} 个条目: ${ev.data.itemName}`)
+            }
           }
           send('[DONE]')
           req.log.info(`[parse-drawing/stream] 完成，共 ${count} 条目`)

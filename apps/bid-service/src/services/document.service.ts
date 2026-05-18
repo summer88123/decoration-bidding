@@ -1,9 +1,13 @@
 // apps/bid-service/src/services/document.service.ts
+import { Agent, fetch as undiciFetch } from 'undici'
 import type { StorageService, BidItemFromAI } from '@decoration-bidding/shared-types'
 import { createLogger } from '@decoration-bidding/shared-utils'
 import { BidDocumentRepository } from '../repositories/bid-document.repository.js'
 import { BidItemRepository } from '../repositories/bid-item.repository.js'
 import { emitDocEvent } from './document-events.js'
+
+// 长时间 SSE 连接使用此 dispatcher，禁用 body timeout（避免 undici BodyTimeoutError）
+const longRunningAgent = new Agent({ bodyTimeout: 0, headersTimeout: 60_000 })
 
 const logger = createLogger('document-service')
 
@@ -56,9 +60,20 @@ export class DocumentService {
     // Step 3: AI 分析图纸（流式接收条目）
     logger.info({ docId }, '开始 AI 分析，调用 ai-agent 流式端点')
     const t2 = Date.now()
-    const items = await this.analyzeDrawingStream(pages, (item) => {
-      emitDocEvent(docId, { type: 'item', item: item as unknown as Record<string, unknown> })
-    })
+    const items = await this.analyzeDrawingStream(
+      pages,
+      (item) => {
+        // 将 AI 返回的 region 对象转为前端期望的 drawingRegion 字符串格式
+        const normalized = {
+          ...item,
+          drawingPage: item.region?.page,
+          drawingRegion: item.region ? JSON.stringify(item.region) : undefined,
+        }
+        logger.info({ docId, itemName: item.itemName, page: item.region?.page }, `[SSE] 收到条目: ${item.itemName}`)
+        emitDocEvent(docId, { type: 'item', item: normalized as unknown as Record<string, unknown> })
+      },
+      (page, total) => { emitDocEvent(docId, { type: 'progress', message: `正在 AI 分析第 ${page}/${total} 页...` }) },
+    )
     logger.info({ docId, items: items.length, ms: Date.now() - t2 }, 'AI 分析完成')
 
     // Step 4: 写入数据库
@@ -85,40 +100,70 @@ export class DocumentService {
   private async analyzeDrawingStream(
     pages: ParsedPage[],
     onItem: (item: BidItemFromAI) => void,
+    onPageProgress?: (page: number, total: number) => void,
   ): Promise<BidItemFromAI[]> {
-    const res = await fetch(`${this.aiServiceUrl}/ai/skills/parse-drawing/stream`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pages }),
-    })
-    if (!res.ok) throw new Error(`ai-agent stream error: ${res.status}`)
+    // 超时：页数 × 3 分钟，最少 10 分钟
+    const timeoutMs = Math.max(pages.length * 3 * 60 * 1000, 10 * 60 * 1000)
+    const controller = new AbortController()
+    const timer = setTimeout(() => {
+      logger.error({ pages: pages.length, timeoutMs }, 'analyzeDrawingStream 超时，中止连接')
+      controller.abort()
+    }, timeoutMs)
 
-    const items: BidItemFromAI[] = []
-    const reader = res.body!.getReader()
-    const decoder = new TextDecoder()
-    let buffer = ''
+    try {
+      const res = await undiciFetch(`${this.aiServiceUrl}/ai/skills/parse-drawing/stream`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pages }),
+        signal: controller.signal,
+        dispatcher: longRunningAgent,
+      })
+      if (!res.ok) throw new Error(`ai-agent stream error: ${res.status}`)
 
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-      buffer += decoder.decode(value, { stream: true })
-      const lines = buffer.split('\n')
-      buffer = lines.pop() ?? ''
-      for (const line of lines) {
-        if (!line.startsWith('data: ')) continue
-        const raw = line.slice(6).trim()
-        if (!raw || raw === '[DONE]') continue
-        try {
-          const parsed = JSON.parse(raw) as { error?: string } & BidItemFromAI
-          if (parsed.error) throw new Error(parsed.error)
-          items.push(parsed)
-          onItem(parsed)
-        } catch (e) {
-          logger.warn({ err: e }, 'SSE 条目解析失败')
+      const items: BidItemFromAI[] = []
+      const reader = res.body!.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+
+      const processLines = (lines: string[]) => {
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue
+          const raw = line.slice(6).trim()
+          if (!raw || raw === '[DONE]') continue
+          try {
+            const parsed = JSON.parse(raw) as { type?: string; error?: string; page?: number; total?: number } & BidItemFromAI
+            if (parsed.error) throw new Error(parsed.error)
+            if (parsed.type === 'page_progress') {
+              onPageProgress?.(parsed.page ?? 0, parsed.total ?? 0)
+            } else if (parsed.itemName && typeof parsed.itemName === 'string' && parsed.itemName.trim()) {
+              items.push(parsed)
+              onItem(parsed)
+            } else {
+              logger.warn({ parsed }, 'SSE 收到无效条目（itemName 为空），已跳过')
+            }
+          } catch (e) {
+            logger.warn({ err: e }, 'SSE 条目解析失败')
+          }
         }
       }
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) {
+          // 流结束后冲洗解码器，处理 buffer 中残留的最后一行
+          buffer += decoder.decode()
+          if (buffer.trim()) processLines(buffer.split('\n'))
+          break
+        }
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() ?? ''
+        processLines(lines)
+      }
+      return items
+    } finally {
+      clearTimeout(timer)
     }
-    return items
   }
 
   getDocumentStatus(docId: string) { return BidDocumentRepository.findById(docId) }

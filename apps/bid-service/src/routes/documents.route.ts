@@ -28,6 +28,8 @@ export const documentsRoute: FastifyPluginAsync = async (app) => {
         'Connection': 'keep-alive',
         'Access-Control-Allow-Origin': '*',
       })
+      // 立即 flush headers（否则客户端要等到第一次 write 才收到响应头）
+      raw.write(': connected\n\n')
 
       const send = (data: unknown) => {
         if (!raw.destroyed) raw.write(`data: ${JSON.stringify(data)}\n\n`)
