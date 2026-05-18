@@ -28,7 +28,7 @@ export function createLogger(service: string, opts?: pino.LoggerOptions): Logger
       target: 'pino-pretty',
       options: {
         colorize: isTTY,        // TTY 时彩色，文件时纯文本
-        translateTime: 'SYS:HH:MM:ss',
+        translateTime: 'SYS:yyyy-mm-dd HH:MM:ss',
         ignore: 'pid,hostname',
         messageFormat: `[${service}] {msg}`,
       },

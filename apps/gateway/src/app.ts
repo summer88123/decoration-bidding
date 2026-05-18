@@ -17,7 +17,7 @@ export async function buildApp() {
           level: config.LOG_LEVEL,
           transport: {
             target: 'pino-pretty',
-            options: { colorize: isTTY, translateTime: 'SYS:HH:MM:ss', ignore: 'pid,hostname' },
+            options: { colorize: isTTY, translateTime: 'SYS:yyyy-mm-dd HH:MM:ss', ignore: 'pid,hostname' },
           },
         },
   })
