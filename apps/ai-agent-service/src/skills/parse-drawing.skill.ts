@@ -39,13 +39,17 @@ const BidItemSchema = z.object({
 
 const ResponseSchema = z.object({ items: z.array(BidItemSchema) })
 
-const SYSTEM_PROMPT = `你是一名专业的香港建筑及室内装修工程量清单（BOQ）工程师。
+const SYSTEM_PROMPT = `你是一名专业的建筑及室内装修工程量清单（BOQ）工程师。
 请分析提供的施工图纸页面，提取所有可识别的工程量清单条目。
 对于每个条目，请提供：
-1. 项目名称（中文）
+1. 项目名称
 2. 数量和单位
 3. 规格说明（如有）
 4. 在图纸中的位置（用 0-1 比例坐标表示：x/y 为左上角，w/h 为宽高）
+
+仅识别图纸上明确标注的条目，尽量避免推测。
+
+不要识别非图纸内容（如标题页、目录等）。
 
 坐标系：原点在页面左上角，x 向右，y 向下。
 优先使用图纸中的语言。
@@ -130,7 +134,7 @@ async function* processPageStream(
     const stream = await streamObject({
       model: buildLlm(),
       schema: ResponseSchema,
-      mode: 'json',
+      // mode: 'json',
       temperature: 1,
       system: SYSTEM_PROMPT,
       messages: buildPageMessages(page),

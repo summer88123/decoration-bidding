@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // 微服务 API 反向代理（开发时指向 gateway）
+  // 微服务 API 反向代理（开发时指向 gateway；SSE 端点已用专属 API Route 直连 bid-service）
   async rewrites() {
     return [
       {

@@ -12,3 +12,9 @@ __pycache__/
 .venv/
 .DS_Store
 uploads
+
+# TypeScript 增量编译缓存，由 tsc 自动生成，无需提交
+**/*.tsbuildinfo
+tsconfig.tsbuildinfo
+# pdfjs-dist worker 由 postinstall 自动复制，无需提交
+apps/web/public/pdf.worker.min.mjs

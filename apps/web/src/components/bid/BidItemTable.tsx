@@ -1,6 +1,7 @@
 'use client'
 
 // apps/web/src/components/bid/BidItemTable.tsx
+import { useEffect, useRef } from 'react'
 import type { BidItemData } from '../../lib/api/bid.api'
 
 interface DrawingRegion {
@@ -26,7 +27,32 @@ function parseRegion(raw?: string): DrawingRegion | null {
   }
 }
 
+const BOTTOM_THRESHOLD = 60 // px，距离底部多少以内算"在底部"
+
 export function BidItemTable({ items, selectedId, onSelect }: Props) {
+  const scrollRef = useRef<HTMLDivElement>(null)
+  // 记录是否"贴近底部"，用 ref 避免触发额外 render
+  const isAtBottomRef = useRef(true)
+
+  // 监听滚动，判断用户是否手动上滚
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    const onScroll = () => {
+      const distFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight
+      isAtBottomRef.current = distFromBottom <= BOTTOM_THRESHOLD
+    }
+    el.addEventListener('scroll', onScroll, { passive: true })
+    return () => el.removeEventListener('scroll', onScroll)
+  }, [])
+
+  // 当 items 更新时，若在底部则自动滚到最新
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el || !isAtBottomRef.current) return
+    el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
+  }, [items.length])
+
   if (items.length === 0) {
     return (
       <div className="flex items-center justify-center h-full text-gray-400 text-sm">
@@ -36,9 +62,9 @@ export function BidItemTable({ items, selectedId, onSelect }: Props) {
   }
 
   return (
-    <div className="overflow-auto h-full">
+    <div ref={scrollRef} className="overflow-auto h-full">
       <table className="w-full text-sm border-collapse">
-        <thead className="bg-gray-50 sticky top-0">
+        <thead className="bg-gray-50 sticky top-0 z-10">
           <tr>
             <th className="px-3 py-2 text-left font-medium text-gray-600 border-b">#</th>
             <th className="px-3 py-2 text-left font-medium text-gray-600 border-b">项目名称</th>
@@ -54,7 +80,7 @@ export function BidItemTable({ items, selectedId, onSelect }: Props) {
             const isSelected = item.id === selectedId
             return (
               <tr
-                key={item.id}
+                key={item.id ?? idx}
                 className={`cursor-pointer border-b transition-colors ${
                   isSelected
                     ? 'bg-blue-50 border-blue-200'

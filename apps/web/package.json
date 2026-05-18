@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "clean": "rm -rf .next"
+    "clean": "rm -rf .next",
+    "copy-pdf-worker": "cp node_modules/pdfjs-dist/build/pdf.worker.min.mjs public/pdf.worker.min.mjs",
+    "postinstall": "pnpm run copy-pdf-worker"
   },
   "dependencies": {
     "@decoration-bidding/shared-types": "workspace:*",
@@ -20,12 +22,14 @@
     "axios": "^1.6.0",
     "clsx": "^2.1.0",
     "lucide-react": "^0.368.0",
-    "next": "14.2.0",
+    "next": "16.2.6",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "react-hook-form": "^7.51.0",
+    "react-pdf": "^10.4.1",
     "socket.io-client": "^4.7.0",
     "tailwind-merge": "^2.2.0",
+    "undici": "^8.3.0",
     "zod": "^3.23.0",
     "zustand": "^4.5.0"
   },
