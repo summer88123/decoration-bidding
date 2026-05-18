@@ -1,0 +1,183 @@
+// This is your Prisma schema file
+// 对应规格书 4.1 核心实体
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [vector]
+}
+
+// ─── 用户与公司 ────────────────────────────────────────────────
+
+model Company {
+  id           String   @id @default(cuid())
+  name         String
+  capabilities Json     @default("{}")
+  licenses     String[]
+  budgetMin    Float?
+  budgetMax    Float?
+  regions      String[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  users          User[]
+  tenderProjects TenderProject[]
+  materialDb     MaterialDb[]
+}
+
+model Role {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  permissions String[]
+
+  users User[]
+}
+
+model User {
+  id           String   @id @default(cuid())
+  companyId    String
+  email        String   @unique
+  passwordHash String
+  roleId       String
+  status       String   @default("active")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  company       Company        @relation(fields: [companyId], references: [id])
+  role          Role           @relation(fields: [roleId], references: [id])
+  notifications Notification[]
+}
+
+// ─── 招标与投标 ────────────────────────────────────────────────
+
+model TenderProject {
+  id             String   @id @default(cuid())
+  companyId      String
+  sourceUrl      String?
+  title          String
+  clientName     String?
+  location       String?
+  deadline       DateTime?
+  budgetEstimate Float?
+  matchScore     Float?
+  riskLabels     String[]
+  status         String   @default("new")
+  aiSummary      String?
+  rawDocumentUrl String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  company       Company        @relation(fields: [companyId], references: [id])
+  bids          Bid[]
+  notifications Notification[]
+}
+
+model Bid {
+  id                 String   @id @default(cuid())
+  tenderId           String
+  assignedTo         String?
+  status             String   @default("draft")
+  profitMarginPercent Float?
+  totalCost          Float?
+  totalBidPrice      Float?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  tender    TenderProject @relation(fields: [tenderId], references: [id])
+  bidItems  BidItem[]
+  documents BidDocument[]
+}
+
+model BidItem {
+  id            String  @id @default(cuid())
+  bidId         String
+  documentId    String?
+  itemName      String
+  description   String?
+  quantity      Float
+  unit          String
+  costPrice     Float
+  sellPrice     Float
+  isSpecial     Boolean @default(false)
+  remark        String?
+  drawingPage   Int?
+  drawingRegion String?
+  sortOrder     Int     @default(0)
+
+  bid      Bid          @relation(fields: [bidId], references: [id])
+  document BidDocument? @relation(fields: [documentId], references: [id])
+}
+
+model BidDocument {
+  id           String   @id @default(cuid())
+  bidId        String
+  fileType     String   // pdf | dwg | ifc
+  fileUrl      String
+  status       String   @default("pending") // pending|processing|completed|failed
+  errorMsg     String?
+  pageCount    Int?
+  drawingLinks String[]
+  ifcMetadata  Json?
+  createdAt    DateTime @default(now())
+
+  bid      Bid       @relation(fields: [bidId], references: [id])
+  bidItems BidItem[]
+}
+
+// ─── 知识与配置 ────────────────────────────────────────────────
+
+model ScraperTarget {
+  id           String   @id @default(cuid())
+  name         String
+  urlPattern   String
+  siteType     String
+  loginRequired Boolean @default(false)
+  scrapeConfig Json     @default("{}")
+  scheduleCron String?
+  status       String   @default("active")
+  createdAt    DateTime @default(now())
+}
+
+model MaterialDb {
+  id        String   @id @default(cuid())
+  companyId String
+  name      String
+  spec      String?
+  unitCost  Float
+  supplier  String?
+  category  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id])
+}
+
+model RagDocument {
+  id         String                       @id @default(cuid())
+  domain     String                       // RAG 知识领域
+  sourceType String
+  title      String
+  content    String
+  embedding  Unsupported("vector(1536)")? // pgvector: text-embedding-3-large 维度
+  chunkCount Int                          @default(0)
+  uploadedAt DateTime                     @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  tenderId  String?
+  type      String
+  content   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user   User           @relation(fields: [userId], references: [id])
+  tender TenderProject? @relation(fields: [tenderId], references: [id])
+}

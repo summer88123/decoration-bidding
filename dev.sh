@@ -1,0 +1,115 @@
+#!/usr/bin/env bash
+# dev.sh — 一键启动 / 停止所有开发服务
+# 用法：
+#   ./dev.sh start   启动所有服务（默认）
+#   ./dev.sh stop    停止所有服务
+#   ./dev.sh restart 重启所有服务
+#   ./dev.sh logs    实时查看所有服务日志
+#   ./dev.sh status  查看各服务健康状态
+
+set -uo pipefail
+
+ROOT="$(cd "$(dirname "$0")" && pwd)"
+LOGS="$ROOT/logs"
+
+GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; NC='\033[0m'
+info()  { echo -e "${GREEN}[dev]${NC} $*"; }
+warn()  { echo -e "${YELLOW}[dev]${NC} $*"; }
+
+port_of() {
+  case "$1" in
+    web)              echo 3000 ;;
+    gateway)          echo 8080 ;;
+    bid-service)      echo 3003 ;;
+    ai-agent-service) echo 3005 ;;
+    bim-service)      echo 3008 ;;
+    *)                echo 0 ;;
+  esac
+}
+
+stop_all() {
+  info "停止所有服务..."
+  pkill -9 -f "tsx watch" 2>/dev/null || true
+  pkill -9 -f "pnpm.*filter.*(gateway|bid-service|ai-agent|web)" 2>/dev/null || true
+  pkill -9 -f "next dev" 2>/dev/null || true
+  pkill -9 -f "uvicorn src.app" 2>/dev/null || true
+  sleep 2
+  for svc in web gateway bid-service ai-agent-service bim-service; do
+    p=$(port_of "$svc")
+    pid=$(lsof -ti ":$p" 2>/dev/null || true)
+    if [[ -n "$pid" ]]; then
+      warn "端口 $p 仍被占用 (PID $pid)，强制释放..."
+      kill -9 "$pid" 2>/dev/null || true
+    fi
+  done
+  info "全部服务已停止"
+}
+
+start_all() {
+  mkdir -p "$LOGS"
+  info "启动 web (port 3000)..."
+  nohup pnpm --filter web dev > "$LOGS/web.log" 2>&1 &
+  info "启动 gateway (port 8080)..."
+  nohup pnpm --filter @decoration-bidding/gateway dev > "$LOGS/gateway.log" 2>&1 &
+  info "启动 ai-agent-service (port 3005)..."
+  nohup pnpm --filter ai-agent-service dev > "$LOGS/ai-agent-service.log" 2>&1 &
+  info "启动 bid-service (port 3003)..."
+  nohup pnpm --filter bid-service dev > "$LOGS/bid-service.log" 2>&1 &
+  info "启动 bim-service (port 3008)..."
+  (cd "$ROOT/apps/bim-service" && nohup .venv/bin/uvicorn src.app:app \
+    --host 0.0.0.0 --port 3008 --reload --log-level info \
+    > "$LOGS/bim-service.log" 2>&1) &
+  info "等待服务就绪..."
+  sleep 8
+  status_all
+}
+
+status_all() {
+  echo ""
+  echo "  服务健康状态："
+  echo "  ─────────────────────────────────────────"
+  for entry in \
+    "web|http://localhost:3000" \
+    "gateway|http://localhost:8080/health" \
+    "bid-service|http://localhost:3003/health" \
+    "ai-agent-service|http://localhost:3005/health" \
+    "bim-service|http://localhost:3008/health"
+  do
+    name="${entry%%|*}"
+    url="${entry##*|}"
+    port=$(port_of "$name")
+    code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 3 "$url" 2>/dev/null || echo "000")
+    if [[ "$code" == "200" ]]; then
+      echo -e "  ${GREEN}✓${NC} $name (port $port)"
+    else
+      echo -e "  ${RED}✗${NC} $name (port $port) — HTTP $code"
+    fi
+  done
+  echo "  ─────────────────────────────────────────"
+  echo "  日志目录: $LOGS/"
+  echo ""
+}
+
+show_logs() {
+  info "实时查看所有服务日志（Ctrl+C 退出）..."
+  tail -f \
+    "$LOGS/web.log" \
+    "$LOGS/gateway.log" \
+    "$LOGS/ai-agent-service.log" \
+    "$LOGS/bid-service.log" \
+    "$LOGS/bim-service.log" \
+    2>/dev/null
+}
+
+CMD="${1:-start}"
+case "$CMD" in
+  start)   start_all ;;
+  stop)    stop_all ;;
+  restart) stop_all; sleep 1; start_all ;;
+  logs)    show_logs ;;
+  status)  status_all ;;
+  *)
+    echo "用法: $0 {start|stop|restart|logs|status}"
+    exit 1
+    ;;
+esac
