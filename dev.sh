@@ -29,19 +29,29 @@ port_of() {
 
 stop_all() {
   info "停止所有服务..."
-  pkill -9 -f "tsx watch" 2>/dev/null || true
-  pkill -9 -f "pnpm.*filter.*(gateway|bid-service|ai-agent|web)" 2>/dev/null || true
-  pkill -9 -f "next dev" 2>/dev/null || true
-  pkill -9 -f "uvicorn src.app" 2>/dev/null || true
+
+  # 1. 先 kill pnpm/npm 父进程（避免 watch 模式自动重启子进程）
+  pkill -9 -f "pnpm.*dev" 2>/dev/null || true
+  pkill -9 -f "npm.*dev"  2>/dev/null || true
+  # 2. kill tsx / next 进程
+  pkill -9 -f "tsx" 2>/dev/null || true
+  pkill -9 -f "next" 2>/dev/null || true
+  # 3. kill uvicorn（bim-service）
+  pkill -9 -f "uvicorn" 2>/dev/null || true
+
   sleep 2
-  for svc in web gateway bid-service ai-agent-service bim-service; do
-    p=$(port_of "$svc")
-    pid=$(lsof -ti ":$p" 2>/dev/null || true)
-    if [[ -n "$pid" ]]; then
-      warn "端口 $p 仍被占用 (PID $pid)，强制释放..."
-      kill -9 "$pid" 2>/dev/null || true
+
+  # 4. 按端口兜底：kill 所有仍占用端口的进程（含子进程）
+  for port in 3000 3001 3002 3003 3004 3005 3006 3007 3008 8080; do
+    # lsof -ti 可能返回多个 PID（如父子进程），逐个 kill
+    pids=$(lsof -ti ":$port" 2>/dev/null || true)
+    if [[ -n "$pids" ]]; then
+      warn "端口 $port 仍被占用 (PID $pids)，强制释放..."
+      echo "$pids" | xargs kill -9 2>/dev/null || true
     fi
   done
+
+  sleep 1
   info "全部服务已停止"
 }
 
