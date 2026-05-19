@@ -19,8 +19,7 @@ warn()  { echo -e "${YELLOW}[dev]${NC} $*"; }
 port_of() {
   case "$1" in
     web)              echo 3000 ;;
-    gateway)          echo 8080 ;;
-    bid-service)      echo 3003 ;;
+    core-service)     echo 8080 ;;
     ai-agent-service) echo 3005 ;;
     bim-service)      echo 3008 ;;
     *)                echo 0 ;;
@@ -42,7 +41,7 @@ stop_all() {
   sleep 2
 
   # 4. 按端口兜底：kill 所有仍占用端口的进程（含子进程）
-  for port in 3000 3001 3002 3003 3004 3005 3006 3007 3008 8080; do
+  for port in 3000 3005 3008 8080; do
     # lsof -ti 可能返回多个 PID（如父子进程），逐个 kill
     pids=$(lsof -ti ":$port" 2>/dev/null || true)
     if [[ -n "$pids" ]]; then
@@ -59,12 +58,10 @@ start_all() {
   mkdir -p "$LOGS"
   info "启动 web (port 3000)..."
   nohup pnpm --filter web dev > "$LOGS/web.log" 2>&1 &
-  info "启动 gateway (port 8080)..."
-  nohup pnpm --filter @decoration-bidding/gateway dev > "$LOGS/gateway.log" 2>&1 &
+  info "启动 core-service (port 8080)..."
+  nohup pnpm --filter @decoration-bidding/core-service dev > "$LOGS/core-service.log" 2>&1 &
   info "启动 ai-agent-service (port 3005)..."
   nohup pnpm --filter ai-agent-service dev > "$LOGS/ai-agent-service.log" 2>&1 &
-  info "启动 bid-service (port 3003)..."
-  nohup pnpm --filter bid-service dev > "$LOGS/bid-service.log" 2>&1 &
   info "启动 bim-service (port 3008)..."
   (cd "$ROOT/apps/bim-service" && nohup .venv/bin/uvicorn src.app:app \
     --host 0.0.0.0 --port 3008 --reload --log-level info \
@@ -80,8 +77,7 @@ status_all() {
   echo "  ─────────────────────────────────────────"
   for entry in \
     "web|http://localhost:3000" \
-    "gateway|http://localhost:8080/health" \
-    "bid-service|http://localhost:3003/health" \
+    "core-service|http://localhost:8080/health" \
     "ai-agent-service|http://localhost:3005/health" \
     "bim-service|http://localhost:3008/health"
   do
@@ -104,9 +100,8 @@ show_logs() {
   info "实时查看所有服务日志（Ctrl+C 退出）..."
   tail -f \
     "$LOGS/web.log" \
-    "$LOGS/gateway.log" \
+    "$LOGS/core-service.log" \
     "$LOGS/ai-agent-service.log" \
-    "$LOGS/bid-service.log" \
     "$LOGS/bim-service.log" \
     2>/dev/null
 }
