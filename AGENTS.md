@@ -88,7 +88,9 @@ src/
 │   └── workers/          # BullMQ Worker 实现
 └── shared/
     └── middleware/       # 认证、错误处理中间件
-``` `ApiResponse<T>`（来自 shared-types）
+```
+
+- 所有路由返回 `ApiResponse<T>`（来自 shared-types）
 - 用 `ok()` / `fail()` 工具函数（来自 shared-utils）包装响应
 - 用 Zod 验证请求 Body/Query/Params
 
@@ -133,11 +135,12 @@ import { prisma } from '@decoration-bidding/database'
 
 | 模式 | 用途 | 实现 |
 |------|------|------|
-| REST (via Gateway) | 前端 CRUD 查询 | HTTP → gateway → 下游服务 |
-| RabbitMQ | 异步任务（爬虫→AI→通知） | amqplib |
+| REST | 前端直连 core-service:8080 | HTTP → core-service |
+| HTTP | core-service 调用 ai-agent-service / bim-service | 内部服务间直接 HTTP |
+| BullMQ | 异步任务（爬虫→AI→通知） | BullMQ（基于 Redis） |
 | WebSocket | AI 进度流、语音流 | Socket.io + @fastify/websocket |
 
-**RabbitMQ 队列命名约定**：`<source>.<event>`，如 `tender.raw`、`bid.generated`
+**BullMQ 队列命名约定**：`<source>.<event>`，如 `tender.raw`、`bid.generated`
 
 ---
 
@@ -192,7 +195,7 @@ pnpm dev
 ## 不要做的事
 
 - 不要在各服务中重复定义已在 `shared-types` 存在的类型
-- 不要绕过 API Gateway 直接调用下游服务（前端侧）
+- 不要绕过 core-service 直接调用 ai-agent-service / bim-service（前端侧）
 - 不要在 `bim-service` 以外使用 Python
 - 不要在 `ai-agent-service` 以外直接调用 LLM API
 - 不要修改 Prisma Schema 后忘记运行 `db:generate`
