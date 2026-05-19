@@ -8,6 +8,12 @@ import multipart from '@fastify/multipart'
 import { config } from './config.js'
 import { errorHandler } from './shared/middleware/error.js'
 import { bidRoutes } from './modules/bid/routes.js'
+import { authRoutes } from './modules/auth/routes.js'
+import { userRoutes } from './modules/user/routes.js'
+import { tenderRoutes } from './modules/tender/routes.js'
+import { scraperRoutes } from './modules/scraper/routes.js'
+import { notifyRoutes } from './modules/notify/routes.js'
+import { voiceRoutes } from './modules/voice/routes.js'
 
 const isProd = process.env.NODE_ENV === 'production'
 const isTTY = process.stdout.isTTY === true
@@ -41,6 +47,12 @@ export async function buildApp() {
   app.get('/health', async () => ({ status: 'ok', service: 'core-service' }))
 
   await app.register(bidRoutes)
+  await app.register(authRoutes)
+  await app.register(userRoutes)
+  await app.register(tenderRoutes)
+  await app.register(scraperRoutes)
+  await app.register(notifyRoutes)
+  await app.register(voiceRoutes)
 
   return app
 }
