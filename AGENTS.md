@@ -8,7 +8,7 @@
 
 ## 项目概览
 
-香港建筑及室内设计行业的 AI 驱动投标辅助系统。Monorepo，包含 10 个微服务。
+香港建筑及室内设计行业的 AI 驱动投标辅助系统。Monorepo，包含 4 个服务（精简架构）。
 
 **规格书**：`系统设计规格书.md`（所有功能需求的权威来源）
 
@@ -20,14 +20,9 @@
 decoration-bidding/
 ├── apps/
 │   ├── web/               # Next.js 14 前端（port 3000）
-│   ├── gateway/           # API 网关 Fastify（port 8080）
-│   ├── user-service/      # 用户服务（port 3001）
-│   ├── tender-service/    # 招标项目服务（port 3002）
-│   ├── bid-service/       # 标书服务（port 3003）
-│   ├── scraper-service/   # 爬虫服务（port 3004）
+│   ├── core-service/      # 核心业务服务 Fastify（port 8080）
+│   │   └── src/modules/   # auth / user / tender / bid / scraper / notify / voice
 │   ├── ai-agent-service/  # AI 智能体服务（port 3005）
-│   ├── notify-service/    # 通知服务（port 3006）
-│   ├── voice-service/     # 语音服务（port 3007）
 │   └── bim-service/       # BIM/IFC Python 服务（port 3008）
 ├── packages/
 │   ├── shared-types/      # 所有服务共用的 TypeScript 类型
@@ -50,7 +45,7 @@ decoration-bidding/
 | AI 服务 | LangGraph JS, Vercel AI SDK, pgvector RAG |
 | BIM/IFC | Python 3.11, FastAPI, IfcOpenShell |
 | 数据库 | PostgreSQL 16 + pgvector, Redis 7 |
-| 消息队列 | RabbitMQ |
+| 消息队列 | BullMQ（基于 Redis） |
 | 文件存储 | S3-compatible（开发用 MinIO） |
 | 构建 | pnpm workspaces + Turborepo |
 
@@ -79,7 +74,21 @@ src/
 └── repositories/     # 数据库访问（通过 @decoration-bidding/database）
 ```
 
-- 所有路由返回 `ApiResponse<T>`（来自 shared-types）
+# core-service 额外结构（模块化单体）：
+```
+src/
+├── modules/
+│   └── <domain>/         # 每个业务域一个 module
+│       ├── routes.ts     # Fastify 插件，注册该域的所有路由
+│       ├── handlers/     # 路由处理函数
+│       ├── services/     # 业务逻辑
+│       └── repositories/ # 数据库访问
+├── queues/
+│   ├── index.ts          # BullMQ Queue 实例（替代 RabbitMQ）
+│   └── workers/          # BullMQ Worker 实现
+└── shared/
+    └── middleware/       # 认证、错误处理中间件
+``` `ApiResponse<T>`（来自 shared-types）
 - 用 `ok()` / `fail()` 工具函数（来自 shared-utils）包装响应
 - 用 Zod 验证请求 Body/Query/Params
 
