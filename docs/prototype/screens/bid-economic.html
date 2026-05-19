@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>经济标工作台 — 工程量清单</title>
+<style>
+:root {
+  --bg: #ffffff; --surface: #f6f8fa; --inset: #eaeef2;
+  --fg: #1f2328; --muted: #656d76; --border: #d0d7de;
+  --accent: #0969da; --green: #1a7f37; --green-subtle: #dafbe1;
+  --red: #cf222e;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); font-size: 13px; color: var(--fg); background: var(--bg); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+.proto-nav { background: #0d1117; color: #e6edf3; font-size: 12px; padding: 6px 16px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+.proto-nav a { color: #58a6ff; text-decoration: none; }
+.proto-nav a:hover { text-decoration: underline; }
+.proto-nav .sep { color: #30363d; }
+.topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-shrink: 0; flex-wrap: wrap; }
+.topbar-left { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.topbar-title { font-weight: 600; font-size: 14px; }
+.topbar-meta { font-size: 12px; color: var(--muted); }
+.btn { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--fg); }
+.btn:hover { background: var(--inset); }
+.btn-primary { background: #1f883d; color: #fff; border-color: rgba(31,35,40,.15); }
+.btn-primary:hover { background: var(--green); }
+.btn-accent { background: var(--bg); color: var(--accent); border-color: var(--accent); }
+.btn-group { display: flex; gap: 6px; align-items: center; }
+
+/* Profit bar */
+.profit-bar { background: var(--bg); border-bottom: 1px solid var(--border); padding: 8px 16px; display: flex; align-items: center; gap: 24px; flex-shrink: 0; flex-wrap: wrap; }
+.profit-field { display: flex; align-items: center; gap: 8px; }
+.profit-field label { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.profit-field input { width: 80px; padding: 3px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-family: var(--mono); text-align: right; }
+.stat-box { display: flex; align-items: center; gap: 8px; padding: 4px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; }
+.stat-label { font-size: 11px; color: var(--muted); }
+.stat-value { font-size: 13px; font-weight: 600; font-family: var(--mono); }
+.stat-value.green { color: var(--green); }
+
+/* Split layout — always left/right, each pane scrolls independently */
+.workspace { display: grid; grid-template-columns: 1fr 1fr; flex: 1 1 0; overflow: hidden; min-height: 0; height: 0; }
+.pane { overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
+.pane-header { padding: 8px 12px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; gap: 8px; }
+.pane-title { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.pane-body { overflow: auto; flex: 1; }
+.divider { width: 1px; background: var(--border); flex-shrink: 0; }
+
+/* Table */
+.bill-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.bill-table th { position: sticky; top: 0; background: var(--surface); border-bottom: 1px solid var(--border); padding: 7px 8px; text-align: left; font-weight: 500; white-space: nowrap; color: var(--muted); }
+.bill-table th.num { text-align: right; }
+.bill-table td { padding: 6px 8px; border-bottom: 1px solid var(--inset); vertical-align: middle; }
+.bill-table td.num { text-align: right; font-family: var(--mono); }
+.bill-table tr:hover td { background: #f6f8fa; }
+.bill-table tr.selected td { background: #ddf4ff; }
+.code-cell { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.manual-tag { font-size: 10px; background: #fff8c5; color: #9a6700; border-radius: 3px; padding: 1px 4px; margin-left: 4px; }
+.drag-handle { cursor: grab; color: var(--muted); margin-right: 4px; font-size: 12px; }
+.row-action { opacity: 0; cursor: pointer; }
+.bill-table tr:hover .row-action { opacity: 1; }
+.add-row { padding: 8px 12px; border-top: 1px solid var(--inset); }
+</style>
+</head>
+<body>
+
+<div class="proto-nav">
+  <a href="../index.html">← 页面导航</a>
+  <span class="sep">|</span>
+  <a href="bid-workspace.html">← 投标工作台</a>
+  <span class="sep">|</span>
+  <span>经济标工作台</span>
+</div>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div>
+      <div class="topbar-title">A 方案投标 — 经济标</div>
+      <div class="topbar-meta">尖沙咀商业中心翻新工程 · HKD · 草稿</div>
+    </div>
+  </div>
+  <div class="btn-group">
+    <button class="btn" onclick="alert('导出 Excel')">⬇ Excel</button>
+    <button class="btn" onclick="alert('导出 PDF')">⬇ PDF</button>
+    <button class="btn btn-primary">保存</button>
+  </div>
+</div>
+
+<div class="profit-bar">
+  <div class="profit-field">
+    <label>统一利润率</label>
+    <input type="number" value="25" id="margin" oninput="recalcAll(this.value)" />
+    <span style="font-size:12px;color:var(--muted);">%</span>
+  </div>
+  <div class="stat-box"><span class="stat-label">总成本</span><span class="stat-value" id="total-cost">HKD 2,486,800</span></div>
+  <div class="stat-box"><span class="stat-label">总报价</span><span class="stat-value green" id="total-sell">HKD 3,108,500</span></div>
+  <div class="stat-box"><span class="stat-label">综合利润率</span><span class="stat-value green" id="actual-margin">25.0%</span></div>
+  <button class="btn btn-accent" onclick="alert('从物料资料库选取')">📦 物料库</button>
+</div>
+
+<div class="workspace">
+  <!-- Left: Bill of quantities -->
+  <div class="pane">
+    <div class="pane-header">
+      <span class="pane-title">工程量清单明细</span>
+      <div class="btn-group">
+        <button class="btn" onclick="addItem()">+ 新增明细</button>
+        <input type="text" placeholder="搜索…" style="padding:3px 8px;border:1px solid #d0d7de;border-radius:6px;font-size:12px;width:120px;"/>
+      </div>
+    </div>
+    <div class="pane-body">
+      <table class="bill-table">
+        <thead>
+          <tr>
+            <th style="width:24px;"></th>
+            <th style="width:30px;">#</th>
+            <th style="width:70px;">编号</th>
+            <th style="min-width:140px;">名称</th>
+            <th style="width:60px;" class="num">数量</th>
+            <th style="width:40px;">单位</th>
+            <th style="width:80px;" class="num">成本价</th>
+            <th style="width:80px;" class="num">售价</th>
+            <th style="width:80px;" class="num">小计</th>
+            <th style="width:40px;"></th>
+          </tr>
+        </thead>
+        <tbody id="bill-body">
+          <tr onclick="selectRow(this,'1')" data-cost="35" data-qty="850" data-sell="43.75">
+            <td><span class="drag-handle">⠿</span></td>
+            <td class="code-cell">1</td>
+            <td class="code-cell">A-001</td>
+            <td>地板拆除<br><span style="font-size:11px;color:#656d76;">拆除现有地板及清运</span></td>
+            <td class="num">850</td>
+            <td style="color:#656d76;">m²</td>
+            <td class="num">35.00</td>
+            <td class="num">43.75</td>
+            <td class="num">37,188</td>
+            <td><span class="row-action" style="color:#cf222e;" onclick="event.stopPropagation();this.closest('tr').remove()">✕</span></td>
+          </tr>
+          <tr onclick="selectRow(this,'2')" data-cost="280" data-qty="420" data-sell="350">
+            <td><span class="drag-handle">⠿</span></td>
+            <td class="code-cell">2</td>
+            <td class="code-cell">B-001</td>
+            <td>水电隐蔽工程<br><span style="font-size:11px;color:#656d76;">强弱电线槽开凿及铺设</span></td>
+            <td class="num">420</td>
+            <td style="color:#656d76;">m</td>
+            <td class="num">280.00</td>
+            <td class="num">350.00</td>
+            <td class="num">147,000</td>
+            <td><span class="row-action" style="color:#cf222e;" onclick="event.stopPropagation();this.closest('tr').remove()">✕</span></td>
+          </tr>
+          <tr onclick="selectRow(this,'3')" data-cost="520" data-qty="1200" data-sell="650">
+            <td><span class="drag-handle">⠿</span></td>
+            <td class="code-cell">3</td>
+            <td class="code-cell">C-001</td>
+            <td>轻体隔墙（75mm 轻钢龙骨）<br><span style="font-size:11px;color:#656d76;">含双面石膏板、岩棉填充</span></td>
+            <td class="num">1,200</td>
+            <td style="color:#656d76;">m²</td>
+            <td class="num">520.00</td>
+            <td class="num">650.00<span class="manual-tag">手动</span></td>
+            <td class="num">780,000</td>
+            <td><span class="row-action" style="color:#cf222e;" onclick="event.stopPropagation();this.closest('tr').remove()">✕</span></td>
+          </tr>
+          <tr onclick="selectRow(this,'4')" data-cost="1800" data-qty="380" data-sell="2250">
+            <td><span class="drag-handle">⠿</span></td>
+            <td class="code-cell">4</td>
+            <td class="code-cell">D-001</td>
+            <td>铝扣板吊顶<br><span style="font-size:11px;color:#656d76;">600×600 铝扣板含主副龙骨</span></td>
+            <td class="num">380</td>
+            <td style="color:#656d76;">m²</td>
+            <td class="num">1,800.00</td>
+            <td class="num">2,250.00</td>
+            <td class="num">855,000</td>
+            <td><span class="row-action" style="color:#cf222e;" onclick="event.stopPropagation();this.closest('tr').remove()">✕</span></td>
+          </tr>
+          <tr onclick="selectRow(this,'5')" data-cost="95" data-qty="5200" data-sell="118.75" style="">
+            <td><span class="drag-handle">⠿</span></td>
+            <td class="code-cell">5</td>
+            <td class="code-cell">E-001</td>
+            <td>乳胶漆涂刷<br><span style="font-size:11px;color:#656d76;">墙面两底三面，含批荡</span></td>
+            <td class="num">5,200</td>
+            <td style="color:#656d76;">m²</td>
+            <td class="num">95.00</td>
+            <td class="num">118.75</td>
+            <td class="num">617,500</td>
+            <td><span class="row-action" style="color:#cf222e;" onclick="event.stopPropagation();this.closest('tr').remove()">✕</span></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="add-row">
+        <button class="btn" onclick="addItem()">+ 新增明细行</button>
+        <button class="btn" style="margin-left:8px;color:#0969da;border-color:#0969da;" onclick="alert('从物料资料库检索')">📦 从物料库添加</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Right: Drawing viewer -->
+  <div class="pane">
+    <div class="pane-header">
+      <span class="pane-title">图纸查看器</span>
+      <div class="btn-group">
+        <button class="btn" onclick="document.getElementById('file-upload').click()">⬆ 上传图纸</button>
+        <input id="file-upload" type="file" accept=".pdf,.dwg,.ifc" style="display:none;" onchange="handleUpload(this)"/>
+        <select style="padding:3px 8px;border:1px solid #d0d7de;border-radius:6px;font-size:12px;" onchange="changePage(this.value)">
+          <option>平面图 P-01</option>
+          <option>天花图 P-02</option>
+          <option>立面图 P-03</option>
+        </select>
+      </div>
+    </div>
+    <div class="pane-body" style="background:#1e1e2e;position:relative;display:flex;align-items:center;justify-content:center;">
+      <!-- PDF viewer mock -->
+      <div id="drawing-view" style="width:100%;height:100%;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;">
+        <svg viewBox="0 0 600 800" style="max-height:90%;max-width:90%;background:#fff;box-shadow:0 4px 20px rgba(0,0,0,.4);">
+          <!-- Floor plan mock -->
+          <rect x="0" y="0" width="600" height="800" fill="#fff" stroke="#999" stroke-width="0.5"/>
+          <!-- Walls -->
+          <rect x="40" y="40" width="520" height="720" fill="none" stroke="#333" stroke-width="4"/>
+          <line x1="200" y1="40" x2="200" y2="400" stroke="#333" stroke-width="3"/>
+          <line x1="200" y1="400" x2="400" y2="400" stroke="#333" stroke-width="3"/>
+          <line x1="400" y1="40" x2="400" y2="560" stroke="#333" stroke-width="3"/>
+          <line x1="40" y1="400" x2="200" y2="400" stroke="#333" stroke-width="3"/>
+          <!-- Highlighted region for selected row -->
+          <rect id="highlight-B2-FLOOR" x="41" y="41" width="518" height="357" fill="rgba(9,105,218,0.15)" stroke="#0969da" stroke-width="2" stroke-dasharray="6,3" style="display:none;"/>
+          <rect id="highlight-CEILING" x="201" y="41" width="198" height="357" fill="rgba(26,127,55,0.15)" stroke="#1a7f37" stroke-width="2" stroke-dasharray="6,3" style="display:none;"/>
+          <!-- Labels -->
+          <text x="100" y="220" font-size="14" fill="#656d76" text-anchor="middle">会议室 A</text>
+          <text x="300" y="220" font-size="14" fill="#656d76" text-anchor="middle">开放办公区</text>
+          <text x="480" y="220" font-size="14" fill="#656d76" text-anchor="middle">接待厅</text>
+          <text x="300" y="600" font-size="14" fill="#656d76" text-anchor="middle">主通道 / 走廊</text>
+          <!-- Dimension lines -->
+          <line x1="40" y1="820" x2="560" y2="820" stroke="#999" stroke-width="0.5"/>
+          <text x="300" y="835" font-size="10" fill="#999" text-anchor="middle">28,000</text>
+          <!-- Drawing title block -->
+          <rect x="400" y="730" width="200" height="70" fill="#f6f8fa" stroke="#d0d7de" stroke-width="0.5"/>
+          <text x="500" y="750" font-size="9" fill="#656d76" text-anchor="middle">平面布置图</text>
+          <text x="500" y="763" font-size="8" fill="#656d76" text-anchor="middle">项目：尖沙咀商业中心翻新工程</text>
+          <text x="500" y="775" font-size="8" fill="#656d76" text-anchor="middle">比例：1:100  图号：P-01</text>
+          <text x="500" y="787" font-size="8" fill="#656d76" text-anchor="middle">日期：2026-05-01</text>
+        </svg>
+        <!-- Region label overlay -->
+        <div id="region-label" style="display:none;position:absolute;top:16px;left:16px;background:rgba(9,105,218,.9);color:#fff;font-size:12px;padding:4px 10px;border-radius:4px;">已高亮：B2-FLOOR</div>
+      </div>
+      <!-- File list overlay (hidden by default) -->
+      <div id="file-list" style="display:none;position:absolute;bottom:0;left:0;right:0;background:rgba(30,30,46,.92);padding:10px 16px;">
+        <div style="font-size:11px;color:#8b949e;margin-bottom:6px;">已上传图纸</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <div style="background:#161b22;border:1px solid #30363d;border-radius:6px;padding:6px 12px;color:#e6edf3;font-size:12px;cursor:pointer;" onclick="selectFile('P-01')">📄 平面图 P-01.pdf</div>
+          <div style="background:#161b22;border:1px solid #30363d;border-radius:6px;padding:6px 12px;color:#e6edf3;font-size:12px;cursor:pointer;" onclick="selectFile('P-02')">📄 天花图 P-02.pdf</div>
+          <div style="background:#161b22;border:1px solid #30363d;border-radius:6px;padding:6px 12px;color:#e6edf3;font-size:12px;cursor:pointer;" onclick="selectFile('P-03')">📄 立面图 P-03.pdf</div>
+        </div>
+      </div>
+      <!-- Toolbar overlay -->
+      <div style="position:absolute;bottom:8px;right:8px;display:flex;gap:4px;">
+        <button onclick="toggleFileList()" style="padding:4px 8px;background:#161b22;border:1px solid #30363d;color:#e6edf3;border-radius:4px;font-size:11px;cursor:pointer;">文件列表</button>
+        <button style="padding:4px 8px;background:#161b22;border:1px solid #30363d;color:#e6edf3;border-radius:4px;font-size:11px;cursor:pointer;">🔍+</button>
+        <button style="padding:4px 8px;background:#161b22;border:1px solid #30363d;color:#e6edf3;border-radius:4px;font-size:11px;cursor:pointer;">🔍-</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const REGIONS = { '1': 'B2-FLOOR', '2': null, '3': 'CEILING', '4': 'CEILING', '5': null };
+function selectRow(row, id) {
+  document.querySelectorAll('#bill-body tr').forEach(r => r.classList.remove('selected'));
+  row.classList.add('selected');
+  document.querySelectorAll('[id^="highlight-"]').forEach(el => el.style.display = 'none');
+  const region = REGIONS[id];
+  const label = document.getElementById('region-label');
+  if (region) {
+    const el = document.getElementById('highlight-' + region);
+    if (el) { el.style.display = 'block'; label.style.display = 'block'; label.textContent = '已高亮：' + region; }
+  } else { label.style.display = 'none'; }
+}
+function addItem() {
+  const tbody = document.getElementById('bill-body');
+  const n = tbody.querySelectorAll('tr').length + 1;
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td><span class="drag-handle">⠿</span></td><td class="code-cell">${n}</td><td><input style="border:1px solid #d0d7de;border-radius:4px;font-size:12px;padding:2px 4px;width:60px;" placeholder="编号"/></td><td><input style="border:1px solid #d0d7de;border-radius:4px;font-size:12px;padding:2px 4px;width:120px;" placeholder="名称"/></td><td class="num"><input type="number" style="border:1px solid #d0d7de;border-radius:4px;font-size:12px;padding:2px 4px;width:60px;text-align:right;" value="0"/></td><td><input style="border:1px solid #d0d7de;border-radius:4px;font-size:12px;padding:2px 4px;width:35px;" placeholder="m²"/></td><td class="num"><input type="number" style="border:1px solid #d0d7de;border-radius:4px;font-size:12px;padding:2px 4px;width:70px;text-align:right;" value="0"/></td><td class="num"><input type="number" style="border:1px solid #d0d7de;border-radius:4px;font-size:12px;padding:2px 4px;width:70px;text-align:right;" value="0"/></td><td class="num">—</td><td><span style="color:#cf222e;cursor:pointer;" onclick="this.closest('tr').remove()">✕</span></td>`;
+  tbody.appendChild(tr);
+}
+function recalcAll(margin) {
+  const m = parseFloat(margin) || 0;
+  document.getElementById('actual-margin').textContent = m.toFixed(1) + '%';
+}
+function toggleFileList() {
+  const fl = document.getElementById('file-list');
+  fl.style.display = fl.style.display === 'none' ? 'block' : 'none';
+}
+function handleUpload(input) { if (input.files[0]) alert('上传成功：' + input.files[0].name); }
+function changePage(v) {}
+function selectFile(v) { document.getElementById('file-list').style.display = 'none'; }
+</script>
+</body>
+</html>

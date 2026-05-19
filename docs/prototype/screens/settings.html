@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>组织设置</title>
+<style>
+:root {
+  --bg: #ffffff; --surface: #f6f8fa; --inset: #eaeef2;
+  --fg: #1f2328; --muted: #656d76; --border: #d0d7de;
+  --accent: #0969da; --green: #1a7f37; --green-subtle: #dafbe1;
+  --red: #cf222e; --red-subtle: #ffebe9; --purple: #8250df;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); font-size: 14px; color: var(--fg); background: var(--bg); }
+.proto-nav { background: #0d1117; color: #e6edf3; font-size: 12px; padding: 6px 16px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 1000; }
+.proto-nav a { color: #58a6ff; text-decoration: none; }
+.proto-nav a:hover { text-decoration: underline; }
+.proto-nav .sep { color: #30363d; }
+.page-header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px 24px; }
+.page-header h1 { font-size: 20px; font-weight: 600; }
+.page-header p { font-size: 13px; color: var(--muted); margin-top: 4px; }
+.layout { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 110px); }
+@media (max-width: 768px) { .layout { grid-template-columns: 1fr; } }
+.sidenav { border-right: 1px solid var(--border); padding: 16px 0; background: var(--surface); }
+.sidenav-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; padding: 4px 16px 8px; }
+.sidenav-item { padding: 7px 16px; font-size: 13px; color: var(--fg); cursor: pointer; display: flex; align-items: center; gap: 8px; }
+.sidenav-item:hover { background: var(--inset); }
+.sidenav-item.active { background: #ddf4ff; color: var(--accent); font-weight: 500; }
+.content { padding: 24px; max-width: 760px; }
+.section { margin-bottom: 32px; }
+.section h2 { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+.section p { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+.box { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; }
+.box-header { padding: 12px 16px; background: var(--surface); border-bottom: 1px solid var(--border); border-radius: 6px 6px 0 0; font-size: 14px; font-weight: 600; }
+.box-body { padding: 16px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 14px; }
+@media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+.form-group { margin-bottom: 14px; }
+.form-group label { font-size: 12px; font-weight: 500; display: block; margin-bottom: 4px; }
+.form-group input, .form-group select, .form-group textarea { width: 100%; padding: 5px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-family: var(--font); }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(9,105,218,.2); }
+.tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9999px; font-size: 12px; background: #ddf4ff; color: var(--accent); border: 1px solid #b6d4f8; margin: 3px; }
+.tag button { background: none; border: none; cursor: pointer; font-size: 12px; color: var(--accent); padding: 0; line-height: 1; }
+.tag-input-area { border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; display: flex; flex-wrap: wrap; gap: 2px; align-items: center; min-height: 38px; cursor: text; }
+.tag-input-area input { border: none; outline: none; font-size: 13px; flex: 1; min-width: 120px; padding: 2px 4px; }
+.btn { display: inline-flex; align-items: center; gap: 4px; padding: 5px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--fg); }
+.btn:hover { background: var(--inset); }
+.btn-primary { background: #1f883d; color: #fff; border-color: rgba(31,35,40,.15); }
+.btn-primary:hover { background: var(--green); }
+.btn-danger { color: var(--red); }
+.btn-danger:hover { background: var(--red-subtle); border-color: var(--red); }
+.btn-group { display: flex; gap: 8px; align-items: center; }
+.divider { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+</style>
+</head>
+<body>
+
+<div class="proto-nav">
+  <a href="../index.html">← 页面导航</a>
+  <span class="sep">|</span>
+  <span>组织设置</span>
+</div>
+
+<div class="page-header">
+  <h1>组织设置</h1>
+  <p>管理公司信息、成员权限和物料资料库</p>
+</div>
+
+<div class="layout">
+  <div class="sidenav">
+    <div class="sidenav-label">设置</div>
+    <div class="sidenav-item active" data-tab="company">🏢 公司信息</div>
+    <div class="sidenav-item" data-tab="members">👥 成员管理</div>
+    <div class="sidenav-item" data-tab="materials">📦 物料资料库</div>
+    <div class="sidenav-item" data-tab="danger">⚠ 危险操作</div>
+  </div>
+
+  <div class="content">
+
+    <!-- Company info tab -->
+    <div id="tab-company">
+      <div class="section">
+        <h2>公司基础信息</h2>
+        <p>此信息将用于 AI 投标匹配，请保持准确。</p>
+        <div class="box">
+          <div class="box-header">基础信息</div>
+          <div class="box-body">
+            <div class="form-row">
+              <div class="form-group">
+                <label>公司名称 *</label>
+                <input type="text" value="ABC 装修工程有限公司"/>
+              </div>
+              <div class="form-group">
+                <label>营业执照号</label>
+                <input type="text" value="12345678-000-12-26-0" style="font-family:var(--mono);"/>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>联系电话</label>
+                <input type="text" value="+852 2345 6789"/>
+              </div>
+              <div class="form-group">
+                <label>电子邮箱</label>
+                <input type="email" value="info@abc-renovation.hk"/>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>公司地址</label>
+              <input type="text" value="香港九龙观塘工业区成业街 22 号 15 楼"/>
+            </div>
+            <div class="form-group">
+              <label>公司简介</label>
+              <textarea rows="3">本公司成立于 2010 年，专注于商业室内设计及施工，香港注册承建商，拥有多项专业资质认证，服务客户逾 200 家。</textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="section">
+        <h2>专业资质</h2>
+        <p>选择公司具备的专业资质，AI 将据此进行投标匹配。</p>
+        <div class="box">
+          <div class="box-body">
+            <div class="tag-input-area" id="qual-tags">
+              <span class="tag">屋宇装备注册承建商 <button>×</button></span>
+              <span class="tag">一般建筑承建商 <button>×</button></span>
+              <span class="tag">消防安装工程 <button>×</button></span>
+              <input type="text" placeholder="输入资质后回车添加"/>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="btn-group" style="margin-bottom:32px">
+        <button class="btn btn-primary">保存公司信息</button>
+        <button class="btn">取消</button>
+      </div>
+    </div>
+
+    <!-- Members tab -->
+    <div id="tab-members" style="display:none">
+      <div class="section">
+        <h2>成员管理</h2>
+        <p>管理团队成员及其权限角色。</p>
+        <div class="btn-group" style="margin-bottom:16px">
+          <button class="btn btn-primary">+ 邀请成员</button>
+        </div>
+        <div class="box">
+          <div class="box-header" style="display:flex;justify-content:space-between;align-items:center">
+            <span>成员列表（4人）</span>
+            <input type="text" placeholder="搜索成员…" style="font-size:12px;padding:3px 10px;border:1px solid var(--border);border-radius:6px;width:180px"/>
+          </div>
+          <div class="box-body" style="padding:0">
+            <table style="width:100%;border-collapse:collapse;font-size:13px">
+              <thead style="background:var(--surface);border-bottom:1px solid var(--border)">
+                <tr>
+                  <th style="padding:8px 16px;text-align:left;font-weight:500">姓名</th>
+                  <th style="padding:8px 16px;text-align:left;font-weight:500">电邮</th>
+                  <th style="padding:8px 16px;text-align:left;font-weight:500">角色</th>
+                  <th style="padding:8px 16px;text-align:left;font-weight:500">状态</th>
+                  <th style="padding:8px 16px;text-align:left;font-weight:500">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="border-bottom:1px solid var(--border)">
+                  <td style="padding:10px 16px;font-weight:500">张三（你）</td>
+                  <td style="padding:10px 16px;color:var(--muted)">zhangsan@abc-renovation.hk</td>
+                  <td style="padding:10px 16px"><span class="tag" style="background:#ddf4ff">超级管理员</span></td>
+                  <td style="padding:10px 16px"><span style="color:var(--green)">● 活跃</span></td>
+                  <td style="padding:10px 16px">—</td>
+                </tr>
+                <tr style="border-bottom:1px solid var(--border)">
+                  <td style="padding:10px 16px;font-weight:500">李四</td>
+                  <td style="padding:10px 16px;color:var(--muted)">lisi@abc-renovation.hk</td>
+                  <td style="padding:10px 16px">
+                    <select style="font-size:12px;padding:2px 6px;border:1px solid var(--border);border-radius:4px">
+                      <option>投标经理</option><option>成员</option><option>只读</option>
+                    </select>
+                  </td>
+                  <td style="padding:10px 16px"><span style="color:var(--green)">● 活跃</span></td>
+                  <td style="padding:10px 16px"><button class="btn btn-danger" style="padding:2px 8px;font-size:12px">移除</button></td>
+                </tr>
+                <tr style="border-bottom:1px solid var(--border)">
+                  <td style="padding:10px 16px;font-weight:500">王五</td>
+                  <td style="padding:10px 16px;color:var(--muted)">wangwu@abc-renovation.hk</td>
+                  <td style="padding:10px 16px">
+                    <select style="font-size:12px;padding:2px 6px;border:1px solid var(--border);border-radius:4px">
+                      <option>成员</option><option>投标经理</option><option>只读</option>
+                    </select>
+                  </td>
+                  <td style="padding:10px 16px"><span style="color:var(--green)">● 活跃</span></td>
+                  <td style="padding:10px 16px"><button class="btn btn-danger" style="padding:2px 8px;font-size:12px">移除</button></td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 16px;font-weight:500;color:var(--muted)">赵六</td>
+                  <td style="padding:10px 16px;color:var(--muted)">zhaoliu@abc-renovation.hk</td>
+                  <td style="padding:10px 16px"><span class="tag" style="background:#fff8c5;color:#9a6700;border-color:#e3b341">待接受</span></td>
+                  <td style="padding:10px 16px"><span style="color:var(--muted)">○ 邀请中</span></td>
+                  <td style="padding:10px 16px"><button class="btn" style="padding:2px 8px;font-size:12px">撤销邀请</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Materials tab -->
+    <div id="tab-materials" style="display:none">
+      <div class="section">
+        <h2>物料资料库</h2>
+        <p>管理常用物料单价，用于经济标自动计算。</p>
+        <div class="box">
+          <div class="box-header" style="display:flex;justify-content:space-between;align-items:center">
+            <span>物料清单</span>
+            <button class="btn btn-primary" style="font-size:12px;padding:4px 10px">＋ 添加物料</button>
+          </div>
+          <div class="box-body" style="padding:0">
+            <table style="width:100%;border-collapse:collapse;font-size:13px">
+              <thead>
+                <tr style="background:var(--surface);border-bottom:1px solid var(--border)">
+                  <th style="padding:8px 16px;text-align:left;font-weight:500;color:var(--muted)">物料名称</th>
+                  <th style="padding:8px 16px;text-align:left;font-weight:500;color:var(--muted)">规格</th>
+                  <th style="padding:8px 16px;text-align:left;font-weight:500;color:var(--muted)">单位</th>
+                  <th style="padding:8px 16px;text-align:right;font-weight:500;color:var(--muted)">参考单价(HKD)</th>
+                  <th style="padding:8px 16px;text-align:left;font-weight:500;color:var(--muted)">类别</th>
+                  <th style="padding:8px 16px;font-weight:500;color:var(--muted)">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="border-bottom:1px solid var(--border)">
+                  <td style="padding:10px 16px;font-weight:500">优质瓷砖</td>
+                  <td style="padding:10px 16px;color:var(--muted)">600×600mm</td>
+                  <td style="padding:10px 16px;color:var(--muted)">m²</td>
+                  <td style="padding:10px 16px;text-align:right;font-family:var(--mono)">320.00</td>
+                  <td style="padding:10px 16px"><span class="tag">地面材料</span></td>
+                  <td style="padding:10px 16px"><button class="btn" style="padding:2px 8px;font-size:12px">编辑</button></td>
+                </tr>
+                <tr style="border-bottom:1px solid var(--border)">
+                  <td style="padding:10px 16px;font-weight:500">乳胶漆（白色）</td>
+                  <td style="padding:10px 16px;color:var(--muted)">18L/桶</td>
+                  <td style="padding:10px 16px;color:var(--muted)">m²</td>
+                  <td style="padding:10px 16px;text-align:right;font-family:var(--mono)">85.00</td>
+                  <td style="padding:10px 16px"><span class="tag" style="background:#dafbe1;color:var(--green);border-color:#aceebb">墙面材料</span></td>
+                  <td style="padding:10px 16px"><button class="btn" style="padding:2px 8px;font-size:12px">编辑</button></td>
+                </tr>
+                <tr style="border-bottom:1px solid var(--border)">
+                  <td style="padding:10px 16px;font-weight:500">强化木地板</td>
+                  <td style="padding:10px 16px;color:var(--muted)">12mm AC4</td>
+                  <td style="padding:10px 16px;color:var(--muted)">m²</td>
+                  <td style="padding:10px 16px;text-align:right;font-family:var(--mono)">280.00</td>
+                  <td style="padding:10px 16px"><span class="tag">地面材料</span></td>
+                  <td style="padding:10px 16px"><button class="btn" style="padding:2px 8px;font-size:12px">编辑</button></td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 16px;font-weight:500">铝合金窗</td>
+                  <td style="padding:10px 16px;color:var(--muted)">断热桥60系</td>
+                  <td style="padding:10px 16px;color:var(--muted)">m²</td>
+                  <td style="padding:10px 16px;text-align:right;font-family:var(--mono)">1,200.00</td>
+                  <td style="padding:10px 16px"><span class="tag" style="background:#fff8c5;color:#9a6700;border-color:#e3b341">门窗</span></td>
+                  <td style="padding:10px 16px"><button class="btn" style="padding:2px 8px;font-size:12px">编辑</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Danger tab -->
+    <div id="tab-danger" style="display:none">
+      <div class="section">
+        <h2>危险操作</h2>
+        <p>以下操作不可逆，请谨慎操作。</p>
+        <div class="box" style="border-color:var(--red)">
+          <div class="box-header" style="background:#ffebe9;color:var(--red);border-color:var(--red)">危险区域</div>
+          <div class="box-body">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)">
+              <div>
+                <div style="font-weight:500;margin-bottom:4px">转让组织</div>
+                <div style="font-size:12px;color:var(--muted)">将组织所有权转让给其他成员，您将失去超级管理员权限。</div>
+              </div>
+              <button class="btn btn-danger">转让所有权</button>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0">
+              <div>
+                <div style="font-weight:500;margin-bottom:4px;color:var(--red)">解散组织</div>
+                <div style="font-size:12px;color:var(--muted)">永久删除此组织及所有关联数据，此操作无法撤销。</div>
+              </div>
+              <button class="btn" style="background:var(--red);color:#fff;border-color:var(--red)">解散组织</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /.content -->
+</div><!-- /.layout -->
+
+<script>
+document.querySelectorAll('.sidenav-item[data-tab]').forEach(function(item) {
+  item.addEventListener('click', function() {
+    var name = this.getAttribute('data-tab');
+    document.querySelectorAll('[id^="tab-"]').forEach(function(t) { t.style.display = 'none'; });
+    document.querySelectorAll('.sidenav-item').forEach(function(i) { i.classList.remove('active'); });
+    document.getElementById('tab-' + name).style.display = '';
+    this.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>

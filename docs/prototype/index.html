@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>工程招投标管理系统 — 设计原型</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #1f2328;
+  background: #f6f8fa;
+  min-height: 100vh;
+}
+.topbar {
+  background: #24292f;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.topbar-logo {
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.topbar-logo svg { opacity: 0.9; }
+.topbar-badge {
+  background: #30363d;
+  color: #8b949e;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  border: 1px solid #444c56;
+}
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 24px;
+}
+.page-header {
+  margin-bottom: 32px;
+}
+.page-header h1 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1f2328;
+  margin-bottom: 8px;
+}
+.page-header p {
+  color: #656d76;
+  font-size: 14px;
+}
+.module-section { margin-bottom: 40px; }
+.module-title {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #656d76;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #d0d7de;
+}
+.screen-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+.screen-card {
+  background: #fff;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  padding: 16px;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: border-color 80ms ease-out, box-shadow 80ms ease-out;
+  cursor: pointer;
+}
+.screen-card:hover {
+  border-color: #0969da;
+  box-shadow: 0 0 0 3px rgba(9,105,218,0.1);
+  text-decoration: none;
+}
+.screen-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.screen-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2328;
+}
+.screen-card-path {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 11px;
+  color: #656d76;
+  background: #f6f8fa;
+  border: 1px solid #d8dee4;
+  border-radius: 4px;
+  padding: 1px 6px;
+  white-space: nowrap;
+}
+.screen-card-desc {
+  font-size: 12px;
+  color: #656d76;
+  line-height: 1.4;
+}
+.screen-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+.tag {
+  font-size: 11px;
+  padding: 1px 8px;
+  border-radius: 20px;
+  border: 1px solid;
+}
+.tag-auth { background: #ddf4ff; color: #0550ae; border-color: #b6e3ff; }
+.tag-tender { background: #dafbe1; color: #116329; border-color: #aceebb; }
+.tag-bid { background: #fff8c5; color: #7d4e00; border-color: #e3b341; }
+.tag-settings { background: #f6f8fa; color: #656d76; border-color: #d0d7de; }
+.tag-layout { background: #fbefff; color: #6e40c9; border-color: #d8b4fe; }
+
+@media (max-width: 600px) {
+  .screen-grid { grid-template-columns: 1fr; }
+  .container { padding: 24px 16px; }
+}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <div class="topbar-logo">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <rect x="2" y="4" width="16" height="12" rx="2" stroke="white" stroke-width="1.5"/>
+      <path d="M6 8h8M6 11h5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    工程招投标管理系统
+  </div>
+  <span class="topbar-badge">设计原型 · 中保真</span>
+</nav>
+
+<div class="container">
+  <div class="page-header">
+    <h1>页面导航</h1>
+    <p>点击任意卡片进入对应设计页面。共 8 个核心屏幕，覆盖认证、商机、招标、投标、设置五大模块。</p>
+  </div>
+
+  <!-- 认证模块 -->
+  <div class="module-section">
+    <div class="module-title">认证模块 · Auth</div>
+    <div class="screen-grid">
+      <a class="screen-card" href="screens/auth-login.html">
+        <div class="screen-card-header">
+          <span class="screen-card-title">登录页</span>
+          <span class="screen-card-path">/login</span>
+        </div>
+        <div class="screen-card-desc">Email + 密码登录，失败锁定提示，「忘记密码」入口</div>
+        <div class="screen-card-tags">
+          <span class="tag tag-auth">US-AUTH-02</span>
+        </div>
+      </a>
+      <a class="screen-card" href="screens/auth-register.html">
+        <div class="screen-card-header">
+          <span class="screen-card-title">注册页</span>
+          <span class="screen-card-path">/register</span>
+        </div>
+        <div class="screen-card-desc">公司名称 + 姓名 + Email + 密码，注册即成为公司管理员</div>
+        <div class="screen-card-tags">
+          <span class="tag tag-auth">US-AUTH-01</span>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <!-- 招标管理 -->
+  <div class="module-section">
+    <div class="module-title">招标管理 · Tender</div>
+    <div class="screen-grid">
+      <a class="screen-card" href="screens/dashboard.html">
+        <div class="screen-card-header">
+          <span class="screen-card-title">商机仪表板</span>
+          <span class="screen-card-path">/dashboard</span>
+        </div>
+        <div class="screen-card-desc">统计概览 + 招标项目列表，支持状态筛选与关键词搜索</div>
+        <div class="screen-card-tags">
+          <span class="tag tag-tender">US-TENDER-02</span>
+        </div>
+      </a>
+      <a class="screen-card" href="screens/tender-new.html">
+        <div class="screen-card-header">
+          <span class="screen-card-title">新建招标项目</span>
+          <span class="screen-card-path">/tenders/new</span>
+        </div>
+        <div class="screen-card-desc">手动录入招标基础信息，上传招标文件 PDF/DWG/IFC</div>
+        <div class="screen-card-tags">
+          <span class="tag tag-tender">US-TENDER-01</span>
+          <span class="tag tag-tender">US-TENDER-05</span>
+        </div>
+      </a>
+      <a class="screen-card" href="screens/tender-detail.html">
+        <div class="screen-card-header">
+          <span class="screen-card-title">招标项目详情</span>
+          <span class="screen-card-path">/tenders/:id</span>
+        </div>
+        <div class="screen-card-desc">项目信息 + AI 分析结果 + 文件列表 + 关联投标 + 决策操作</div>
+        <div class="screen-card-tags">
+          <span class="tag tag-tender">US-TENDER-03</span>
+          <span class="tag tag-tender">US-TENDER-04</span>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <!-- 投标编制 -->
+  <div class="module-section">
+    <div class="module-title">投标编制 · Bid</div>
+    <div class="screen-grid">
+      <a class="screen-card" href="screens/bid-workspace.html">
+        <div class="screen-card-header">
+          <span class="screen-card-title">投标工作台</span>
+          <span class="screen-card-path">/bids/:id</span>
+        </div>
+        <div class="screen-card-desc">商务标 / 技术标 / 经济标 三 Tab，进度概览，审批流转</div>
+        <div class="screen-card-tags">
+          <span class="tag tag-bid">US-BID-01</span>
+          <span class="tag tag-bid">US-BID-02</span>
+          <span class="tag tag-bid">US-BID-03</span>
+        </div>
+      </a>
+      <a class="screen-card" href="screens/bid-economic.html">
+        <div class="screen-card-header">
+          <span class="screen-card-title">经济标工作台</span>
+          <span class="screen-card-path">/bids/:id/economic</span>
+        </div>
+        <div class="screen-card-desc">左右分屏：工程量清单表格 + PDF图纸查看器，利润率自动计算</div>
+        <div class="screen-card-tags">
+          <span class="tag tag-bid">US-BID-ECON-02</span>
+          <span class="tag tag-bid">US-BID-ECON-03</span>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <!-- 组织设置 -->
+  <div class="module-section">
+    <div class="module-title">组织设置 · Settings</div>
+    <div class="screen-grid">
+      <a class="screen-card" href="screens/settings.html">
+        <div class="screen-card-header">
+          <span class="screen-card-title">组织设置</span>
+          <span class="screen-card-path">/settings</span>
+        </div>
+        <div class="screen-card-desc">公司信息、能力档案、成员管理、物料资料库 四个子页</div>
+        <div class="screen-card-tags">
+          <span class="tag tag-settings">US-ORG-01</span>
+          <span class="tag tag-settings">US-ORG-02</span>
+          <span class="tag tag-settings">US-ORG-03</span>
+          <span class="tag tag-settings">US-ORG-04</span>
+        </div>
+      </a>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

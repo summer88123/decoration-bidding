@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>商机仪表板 — 投标管理系统</title>
+<style>
+:root {
+  --bg: #ffffff;
+  --surface: #f6f8fa;
+  --fg: #1f2328;
+  --muted: #656d76;
+  --border: #d0d7de;
+  --accent: #0969da;
+  --accent-hover: #0550ae;
+  --success: #1a7f37;
+  --danger: #cf222e;
+  --warning: #9a6700;
+  --done: #8250df;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  --radius: 6px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); font-size: 14px; color: var(--fg); background: var(--bg); line-height: 1.5; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* Layout */
+.app { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+@media (max-width: 1011px) { .app { grid-template-columns: 1fr; } }
+
+/* Sidebar */
+.sidebar {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 16px 0;
+  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+}
+@media (max-width: 1011px) { .sidebar { display: none; } }
+.sidebar-logo {
+  display: flex; align-items: center; gap: 8px;
+  padding: 0 16px 16px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 600; font-size: 15px;
+}
+.sidebar-logo svg { color: var(--fg); }
+.sidebar-nav { padding: 8px 0; }
+.nav-section-label {
+  font-size: 11px; font-weight: 600; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.05em;
+  padding: 8px 16px 4px;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 16px; color: var(--fg); font-size: 13px;
+  border-radius: 0; cursor: pointer;
+}
+.nav-item:hover { background: rgba(0,0,0,0.04); text-decoration: none; }
+.nav-item.active { background: #ddf4ff; color: var(--accent); font-weight: 600; }
+.nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+/* Topbar */
+.topbar {
+  border-bottom: 1px solid var(--border);
+  padding: 12px 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; background: var(--bg);
+}
+.topbar-title { font-size: 20px; font-weight: 600; }
+.topbar-actions { display: flex; gap: 8px; align-items: center; }
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 16px; border-radius: var(--radius);
+  font-size: 14px; font-family: var(--font); cursor: pointer;
+  border: 1px solid transparent; font-weight: 400;
+}
+.btn-primary { background: #1f883d; color: #fff; border-color: rgba(31,35,40,.15); }
+.btn-primary:hover { background: var(--success); }
+.btn-default { background: var(--surface); color: var(--fg); border-color: var(--border); }
+.btn-default:hover { background: #f3f4f6; }
+.btn-sm { padding: 3px 12px; font-size: 12px; }
+
+/* Main */
+.main { padding: 24px; overflow-x: hidden; }
+@media (max-width: 767px) { .main { padding: 16px; } }
+
+/* Stats row */
+.stats-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px;
+}
+@media (max-width: 1023px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 599px) { .stats-grid { grid-template-columns: 1fr 1fr; } }
+.stat-card {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px;
+}
+.stat-label { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+.stat-value { font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.stat-delta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.stat-delta.up { color: var(--success); }
+
+/* Filter bar */
+.filter-bar {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;
+}
+.search-input {
+  flex: 1; min-width: 200px; max-width: 320px;
+  padding: 5px 12px; border: 1px solid var(--border);
+  border-radius: var(--radius); font-size: 14px; font-family: var(--font);
+  background: var(--bg); color: var(--fg);
+}
+.search-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(9,105,218,.3); }
+.filter-tabs { display: flex; gap: 2px; }
+.filter-tab {
+  padding: 5px 12px; border-radius: var(--radius); font-size: 12px; cursor: pointer;
+  border: 1px solid var(--border); background: var(--bg); color: var(--muted);
+}
+.filter-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.filter-tab:hover:not(.active) { background: var(--surface); }
+
+/* Prototype nav */
+.proto-nav {
+  background: #1c2128; border-bottom: 1px solid #30363d;
+  padding: 6px 16px; display: flex; align-items: center; gap: 12px;
+  font-size: 12px; position: sticky; top: 0; z-index: 9999;
+}
+.proto-nav a { color: #8b949e; text-decoration: none; display: flex; align-items: center; gap: 4px; }
+.proto-nav a:hover { color: #e6edf3; }
+.proto-nav .proto-divider { color: #30363d; }
+.proto-nav .proto-current { color: #e6edf3; font-weight: 500; }
+</style>
+</head>
+<body>
+<!-- 原型导航 -->
+<nav class="proto-nav">
+  <a href="../index.html">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M6.906.664a1.749 1.749 0 012.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0113.25 15h-3.5a.75.75 0 01-.75-.75V9H7v5.25a.75.75 0 01-.75.75h-3.5A1.75 1.75 0 011 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2z"/></svg>
+    页面导航
+  </a>
+  <span class="proto-divider">/</span>
+  <span class="proto-current">商机仪表板</span>
+</nav>
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect width="20" height="20" rx="4" fill="#0969da"/><path d="M5 10h10M10 5v10" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+      投标管理系统
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">核心功能</div>
+      <a class="nav-item active" href="dashboard.html">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M0 1.75A.75.75 0 01.75 1h14.5a.75.75 0 010 1.5H.75A.75.75 0 010 1.75zM0 8a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H.75A.75.75 0 010 8zm0 6.25a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H.75a.75.75 0 01-.75-.75z"/></svg>
+        商机仪表板
+      </a>
+      <a class="nav-item" href="tender-detail.html">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 1.75C2 .784 2.784 0 3.75 0h8.5C13.216 0 14 .784 14 1.75v14.5A.75.75 0 0113.25 17H2.75a.75.75 0 01-.75-.75V1.75zM3.75 1.5a.25.25 0 00-.25.25V15h9V1.75a.25.25 0 00-.25-.25h-8.5z"/><path d="M5 5h6v1.5H5V5zm0 3h6v1.5H5V8zm0 3h4v1.5H5V11z"/></svg>
+        招标项目
+      </a>
+      <a class="nav-item" href="bid-workspace.html">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M1.5 8a6.5 6.5 0 1113 0 6.5 6.5 0 01-13 0zM8 0a8 8 0 100 16A8 8 0 008 0zm.5 4.75a.75.75 0 00-1.5 0v3.5a.75.75 0 00.471.696l2.5 1a.75.75 0 00.558-1.392L8.5 7.742V4.75z"/></svg>
+        投标工作台
+      </a>
+      <div class="nav-section-label">管理</div>
+      <a class="nav-item" href="settings.html">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M7.429 1.525a6.593 6.593 0 011.142 0c.036.003.108.036.137.146l.289 1.105c.147.56.55.967.997 1.189.174.086.341.183.501.29.447.2.953.133 1.316-.135l.89-.752c.093-.083.18-.09.221-.072a6.619 6.619 0 01.808.459c.03.02.116.09.044.229l-.527 1.075c-.254.518-.249 1.09.04 1.582.075.127.143.26.202.398.16.411.52.67.916.726l1.11.157c.145.02.176.106.177.141.009.29.009.58 0 .870-.001.035-.032.121-.177.14l-1.11.157c-.395.057-.756.316-.915.727a4.8 4.8 0 01-.202.398c-.289.492-.294 1.064-.04 1.582l.527 1.074c.072.14-.014.21-.044.23a6.568 6.568 0 01-.808.458c-.041.018-.128.011-.221-.072l-.89-.752c-.363-.268-.869-.334-1.316-.135a5.011 5.011 0 01-.501.29c-.447.222-.85.629-.997 1.188l-.289 1.106c-.029.11-.101.143-.137.146a6.611 6.611 0 01-1.142 0c-.036-.003-.108-.037-.137-.146l-.289-1.106c-.147-.559-.55-.966-.997-1.188a4.98 4.98 0 01-.501-.29c-.447-.199-.953-.133-1.316.135l-.89.752c-.093.083-.18.09-.221.072a6.58 6.58 0 01-.808-.458c-.03-.02-.116-.09-.044-.23l.527-1.074c.254-.518.249-1.09-.04-1.582a4.85 4.85 0 01-.201-.398c-.16-.411-.521-.67-.916-.727l-1.11-.157c-.145-.02-.176-.105-.177-.14a6.586 6.586 0 010-.87c.001-.036.032-.122.177-.141l1.11-.157c.395-.057.757-.315.917-.726.058-.138.126-.27.2-.398.29-.492.295-1.064.041-1.582l-.527-1.075c-.072-.14.014-.21.044-.229.254-.166.52-.32.808-.46.041-.017.128-.01.221.073l.89.752c.363.268.869.334 1.316.135.16-.107.327-.204.5-.29.449-.222.851-.628.998-1.189l.289-1.105c.029-.11.101-.143.137-.146zM8 11a3 3 0 100-6 3 3 0 000 6z"/></svg>
+        组织设置
+      </a>
+    </nav>
+    <div style="padding:16px;border-top:1px solid var(--border);margin-top:auto;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="width:28px;height:28px;border-radius:50%;background:#0969da;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;">张</div>
+        <div>
+          <div style="font-size:13px;font-weight:500;">张建华</div>
+          <div style="font-size:11px;color:var(--muted);">建华装修工程有限公司</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <div style="display:flex;flex-direction:column;min-height:100vh;">
+    <header class="topbar">
+      <div>
+        <div class="topbar-title">商机仪表板</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;">追踪所有招标机会与投标进展</div>
+      </div>
+      <div class="topbar-actions">
+        <a href="tender-new.html" class="btn btn-primary">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M7.75 2a.75.75 0 01.75.75V7h4.25a.75.75 0 010 1.5H8.5v4.25a.75.75 0 01-1.5 0V8.5H2.75a.75.75 0 010-1.5H7V2.75A.75.75 0 017.75 2z"/></svg>
+          新建招标项目
+        </a>
+      </div>
+    </header>
+
+    <main class="main">
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">待决策</div>
+          <div class="stat-value" style="color:var(--warning);">8</div>
+          <div class="stat-delta">招标项目</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">投标中</div>
+          <div class="stat-value" style="color:var(--accent);">5</div>
+          <div class="stat-delta up">↑ 本月新增 3</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">已提交</div>
+          <div class="stat-value" style="color:var(--done);">12</div>
+          <div class="stat-delta">本季度</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">中标率</div>
+          <div class="stat-value" style="color:var(--success);">33%</div>
+          <div class="stat-delta up">↑ 较上季 +5%</div>
+        </div>
+      </div>
+
+      <!-- Filter bar -->
+      <div class="filter-bar">
+        <input class="search-input" type="search" placeholder="搜索项目名称、业主…">
+        <div class="filter-tabs">
+          <button class="filter-tab active" onclick="setFilter(this,'all')">全部</button>
+          <button class="filter-tab" onclick="setFilter(this,'pending')">待决策 <span style="background:#fff8c5;color:#9a6700;padding:0 5px;border-radius:9999px;font-size:11px;">8</span></button>
+          <button class="filter-tab" onclick="setFilter(this,'bidding')">投标中 <span style="background:#ddf4ff;color:#0969da;padding:0 5px;border-radius:9999px;font-size:11px;">5</span></button>
+          <button class="filter-tab" onclick="setFilter(this,'submitted')">已提交</button>
+          <button class="filter-tab" onclick="setFilter(this,'won')">已中标</button>
+        </div>
+        <select class="btn btn-default btn-sm" style="cursor:pointer;">
+          <option>截标日期 ↑</option>
+          <option>截标日期 ↓</option>
+          <option>创建时间</option>
+        </select>
+      </div>
+
+      <!-- Table -->
+      <div style="border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+            <tr style="background:var(--surface);border-bottom:1px solid var(--border);">
+              <th style="padding:10px 16px;text-align:left;font-weight:600;color:var(--fg);">项目名称</th>
+              <th style="padding:10px 16px;text-align:left;font-weight:600;color:var(--fg);">业主 / 甲方</th>
+              <th style="padding:10px 16px;text-align:left;font-weight:600;color:var(--fg);">截标日期</th>
+              <th style="padding:10px 16px;text-align:right;font-weight:600;color:var(--fg);">预算估算</th>
+              <th style="padding:10px 16px;text-align:left;font-weight:600;color:var(--fg);">状态</th>
+              <th style="padding:10px 16px;text-align:left;font-weight:600;color:var(--fg);">操作</th>
+            </tr>
+          </thead>
+          <tbody id="tenderTable">
+            <!-- rows injected by JS -->
+          </tbody>
+        </table>
+        <div style="padding:12px 16px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface);">
+          <span style="font-size:12px;color:var(--muted);">共 25 条记录，第 1 / 2 页</span>
+          <div style="display:flex;gap:4px;">
+            <button class="btn btn-default btn-sm">上一页</button>
+            <button class="btn btn-default btn-sm" style="background:var(--accent);color:#fff;border-color:var(--accent);">1</button>
+            <button class="btn btn-default btn-sm">2</button>
+            <button class="btn btn-default btn-sm">下一页</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+const STATUS_MAP = {
+  PENDING:   { label:'待决策',  bg:'#fff8c5', color:'#9a6700' },
+  DECIDED:   { label:'决定投标',bg:'#ddf4ff', color:'#0969da' },
+  BIDDING:   { label:'投标中',  bg:'#ddf4ff', color:'#0969da' },
+  SUBMITTED: { label:'已提交',  bg:'#dafbe1', color:'#1a7f37' },
+  WON:       { label:'已中标',  bg:'#1a7f37', color:'#fff' },
+  LOST:      { label:'已落标',  bg:'#ffebe9', color:'#cf222e' },
+  DECLINED:  { label:'已放弃',  bg:'#f6f8fa', color:'#656d76' },
+};
+
+const DATA = [
+  { id:1, title:'尖东某商业大厦 B2 层装修工程', client:'XX 地产集团', deadline:'2026-06-30', budget:3000000, status:'PENDING' },
+  { id:2, title:'旺角商业中心 G/F 翻新工程', client:'美联物业管理', deadline:'2026-07-15', budget:1500000, status:'BIDDING' },
+  { id:3, title:'葵涌物流中心卸货区改建', client:'顺丰速运（香港）', deadline:'2026-07-22', budget:800000, status:'PENDING' },
+  { id:4, title:'铜锣湾精品酒店客房翻新（80间）', client:'雅诗阁服务公寓', deadline:'2026-08-01', budget:5200000, status:'SUBMITTED' },
+  { id:5, title:'元朗新兴工业区厂房内装', client:'香港制造商总会', deadline:'2026-08-10', budget:2200000, status:'WON' },
+  { id:6, title:'中环甲级写字楼 21-24 楼装修', client:'汇丰物业服务', deadline:'2026-08-20', budget:8800000, status:'DECIDED' },
+  { id:7, title:'沙田医院候诊室改善工程', client:'香港医院管理局', deadline:'2026-08-28', budget:650000, status:'PENDING' },
+  { id:8, title:'将军澳购物中心扩建工程', client:'新鸿基地产', deadline:'2026-09-05', budget:12000000, status:'BIDDING' },
+];
+
+function fmt(n) { return 'HK$' + n.toLocaleString(); }
+
+function renderTable(rows) {
+  const tbody = document.getElementById('tenderTable');
+  tbody.innerHTML = rows.map(r => {
+    const s = STATUS_MAP[r.status] || STATUS_MAP.PENDING;
+    const isUrgent = new Date(r.deadline) - new Date() < 14*86400*1000;
+    return `<tr style="border-bottom:1px solid var(--border);" onmouseenter="this.style.background='#f6f8fa'" onmouseleave="this.style.background=''">
+      <td style="padding:10px 16px;"><a href="tender-detail.html" style="font-weight:500;">${r.title}</a></td>
+      <td style="padding:10px 16px;color:var(--muted);">${r.client}</td>
+      <td style="padding:10px 16px;font-variant-numeric:tabular-nums;${isUrgent?'color:var(--danger);font-weight:500;':''}">${r.deadline}</td>
+      <td style="padding:10px 16px;text-align:right;font-variant-numeric:tabular-nums;">${fmt(r.budget)}</td>
+      <td style="padding:10px 16px;"><span style="background:${s.bg};color:${s.color};padding:2px 8px;border-radius:9999px;font-size:12px;font-weight:500;">${s.label}</span></td>
+      <td style="padding:10px 16px;">
+        <a href="tender-detail.html" class="btn btn-default btn-sm">查看</a>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+let currentFilter = 'all';
+function setFilter(el, f) {
+  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  currentFilter = f;
+  const map = { all: null, pending:'PENDING', bidding:'BIDDING', submitted:'SUBMITTED', won:'WON' };
+  const filtered = f === 'all' ? DATA : DATA.filter(r => r.status === map[f]);
+  renderTable(filtered);
+}
+
+renderTable(DATA);
+</script>
+</body>
+</html>

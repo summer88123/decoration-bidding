@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>注册 — 工程招投标管理系统</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #1f2328;
+  background: #f6f8fa;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+a { color: #0969da; text-decoration: none; }
+a:hover { text-decoration: underline; }
+.topbar {
+  background: #24292f;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.topbar-logo { color: #fff; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.topbar-back { color: #8b949e; font-size: 12px; margin-left: auto; text-decoration: none; }
+.topbar-back:hover { color: #fff; }
+.auth-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 16px 80px;
+}
+.auth-card { width: 100%; max-width: 400px; }
+.auth-logo-area { text-align: center; margin-bottom: 20px; }
+.auth-logo-area .logo-icon {
+  width: 48px; height: 48px;
+  background: #24292f; border-radius: 10px;
+  display: inline-flex; align-items: center; justify-content: center;
+  margin-bottom: 12px;
+}
+.auth-logo-area h1 { font-size: 20px; font-weight: 600; }
+.form-box {
+  background: #fff;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  padding: 24px;
+  margin-bottom: 12px;
+}
+.section-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #656d76;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eaeef2;
+}
+.form-group { margin-bottom: 16px; }
+.form-group:last-child { margin-bottom: 0; }
+.form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #1f2328;
+}
+.form-group label .required { color: #cf222e; margin-left: 2px; }
+input[type="text"], input[type="email"], input[type="password"] {
+  width: 100%;
+  padding: 5px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #1f2328;
+  background: #fff;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  outline: none;
+  transition: border-color 80ms, box-shadow 80ms;
+}
+input:focus { border-color: #0969da; box-shadow: 0 0 0 3px rgba(9,105,218,0.3); }
+input.valid { border-color: #1a7f37; }
+.help-text { font-size: 12px; color: #656d76; margin-top: 4px; }
+.field-error { font-size: 12px; color: #cf222e; margin-top: 4px; }
+.password-strength {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.strength-bar { display: flex; gap: 3px; flex: 1; }
+.strength-seg {
+  height: 3px;
+  flex: 1;
+  border-radius: 2px;
+  background: #eaeef2;
+  transition: background 200ms;
+}
+.strength-seg.good { background: #1a7f37; }
+.strength-label { font-size: 11px; color: #656d76; }
+.password-match { font-size: 12px; margin-top: 4px; }
+.password-match.ok { color: #1a7f37; }
+.password-match.err { color: #cf222e; }
+.btn {
+  display: block;
+  width: 100%;
+  padding: 5px 16px;
+  font-size: 14px;
+  font-family: inherit;
+  font-weight: 600;
+  line-height: 20px;
+  border-radius: 6px;
+  border: 1px solid;
+  cursor: pointer;
+  text-align: center;
+  transition: background 80ms;
+}
+.btn-primary {
+  background: #1f883d;
+  color: #fff;
+  border-color: rgba(31,35,40,0.15);
+  box-shadow: 0 1px 0 rgba(31,35,40,0.1);
+  margin-top: 20px;
+}
+.btn-primary:hover { background: #1a7f37; }
+.terms-text {
+  font-size: 12px;
+  color: #656d76;
+  margin-top: 14px;
+  text-align: center;
+  line-height: 1.5;
+}
+.secondary-box {
+  background: #fff;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  padding: 14px 24px;
+  text-align: center;
+  font-size: 13px;
+  color: #656d76;
+}
+/* Success state */
+.success-screen {
+  display: none;
+  background: #fff;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  padding: 40px 24px;
+  text-align: center;
+  margin-bottom: 12px;
+}
+.success-icon {
+  width: 56px; height: 56px;
+  background: #dafbe1;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+.success-screen h2 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+.success-screen p { font-size: 14px; color: #656d76; line-height: 1.6; }
+body.state-success .form-box { display: none; }
+body.state-success .success-screen { display: block; }
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <div class="topbar-logo">
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <rect x="1" y="3" width="16" height="12" rx="2" stroke="white" stroke-width="1.5"/>
+      <path d="M5 7h8M5 10.5h5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    MPC · 工程招投标管理系统
+  </div>
+  <a class="topbar-back" href="../index.html">← 返回导航</a>
+</nav>
+
+<div class="auth-wrapper">
+  <div class="auth-card">
+
+    <div class="auth-logo-area">
+      <div class="logo-icon">
+        <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+          <rect x="2" y="5" width="22" height="16" rx="3" stroke="white" stroke-width="1.8"/>
+          <path d="M7 10h12M7 14h8" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h1>创建公司账号</h1>
+    </div>
+
+    <div class="form-box">
+      <div class="section-label">公司信息</div>
+      <div class="form-group">
+        <label for="companyName">公司名称 <span class="required">*</span></label>
+        <input type="text" id="companyName" placeholder="例：ABC 装修工程有限公司" value="ABC 装修工程有限公司">
+        <div class="help-text">注册后将成为该公司的管理员，公司名称可在设置中修改</div>
+      </div>
+
+      <div class="section-label" style="margin-top: 20px;">管理员信息</div>
+      <div class="form-group">
+        <label for="name">姓名 <span class="required">*</span></label>
+        <input type="text" id="name" placeholder="您的姓名" value="张三" class="valid">
+      </div>
+      <div class="form-group">
+        <label for="email">电子邮件地址 <span class="required">*</span></label>
+        <input type="email" id="email" placeholder="name@company.com" value="zhangsan@abc.com" class="valid">
+        <div class="help-text">将用于账号验证和登录，请使用公司邮箱</div>
+      </div>
+      <div class="form-group">
+        <label for="password">密码 <span class="required">*</span></label>
+        <input type="password" id="password" value="MyPassword123" oninput="checkStrength(this.value)">
+        <div class="password-strength">
+          <div class="strength-bar">
+            <div class="strength-seg good" id="s1"></div>
+            <div class="strength-seg good" id="s2"></div>
+            <div class="strength-seg good" id="s3"></div>
+            <div class="strength-seg" id="s4"></div>
+          </div>
+          <span class="strength-label" id="strengthLabel">中等</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="passwordConfirm">确认密码 <span class="required">*</span></label>
+        <input type="password" id="passwordConfirm" value="" oninput="checkMatch()" placeholder="再次输入密码">
+        <div class="password-match" id="matchMsg"></div>
+      </div>
+
+      <button type="button" class="btn btn-primary" onclick="handleRegister()">
+        创建账号并发送验证邮件
+      </button>
+      <div class="terms-text">
+        注册即表示同意 <a href="#">服务条款</a> 与 <a href="#">隐私政策</a>
+      </div>
+    </div>
+
+    <!-- Success state -->
+    <div class="success-screen">
+      <div class="success-icon">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+          <path d="M6 14l5.5 5.5L22 9" stroke="#1a7f37" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h2>验证邮件已发送</h2>
+      <p>我们已向 <strong id="emailDisplay">zhangsan@abc.com</strong> 发送了验证邮件，<br>请点击邮件中的链接激活账号后登录。</p>
+      <p style="margin-top:12px; font-size: 12px; color: #656d76;">未收到邮件？请检查垃圾邮件，或等待几分钟后 <a href="#">重新发送</a></p>
+    </div>
+
+    <div class="secondary-box">
+      已有账号？<a href="auth-login.html">立即登录</a>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function checkStrength(val) {
+  const segs = [document.getElementById('s1'), document.getElementById('s2'), document.getElementById('s3'), document.getElementById('s4')];
+  const label = document.getElementById('strengthLabel');
+  let score = 0;
+  if (val.length >= 8) score++;
+  if (/[A-Z]/.test(val)) score++;
+  if (/[0-9]/.test(val)) score++;
+  if (/[^A-Za-z0-9]/.test(val)) score++;
+  segs.forEach((s, i) => s.classList.toggle('good', i < score));
+  const labels = ['', '弱', '一般', '中等', '强'];
+  label.textContent = labels[score] || '';
+}
+function checkMatch() {
+  const p = document.getElementById('password').value;
+  const c = document.getElementById('passwordConfirm').value;
+  const msg = document.getElementById('matchMsg');
+  if (!c) { msg.textContent = ''; return; }
+  if (p === c) { msg.className = 'password-match ok'; msg.textContent = '✓ 密码一致'; }
+  else { msg.className = 'password-match err'; msg.textContent = '✗ 密码不一致'; }
+}
+function handleRegister() {
+  const email = document.getElementById('email').value;
+  document.getElementById('emailDisplay').textContent = email;
+  document.body.className = 'state-success';
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>新建招标项目 — 投标管理系统</title>
+<style>
+:root {
+  --bg: #ffffff; --surface: #f6f8fa; --fg: #1f2328; --muted: #656d76;
+  --border: #d0d7de; --accent: #0969da; --accent-hover: #0550ae;
+  --success: #1a7f37; --danger: #cf222e;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  --radius: 6px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); font-size: 14px; color: var(--fg); background: var(--bg); line-height: 1.5; }
+a { color: var(--accent); text-decoration: none; }
+
+/* Prototype nav */
+.proto-nav { background: #0d1117; color: #e6edf3; font-size: 12px; padding: 6px 16px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 1000; }
+.proto-nav a { color: #58a6ff; text-decoration: none; font-size: 12px; }
+.proto-nav a:hover { text-decoration: underline; }
+.proto-nav .sep { color: #30363d; }
+.proto-label { color: #8b949e; }
+
+/* App layout */
+.app { display: grid; grid-template-columns: 240px 1fr; min-height: calc(100vh - 32px); }
+
+/* Sidebar */
+.sidebar { background: var(--surface); border-right: 1px solid var(--border); padding: 16px 0; display: flex; flex-direction: column; }
+.sidebar-logo { padding: 0 16px 16px; border-bottom: 1px solid var(--border); font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+.sidebar-logo svg { color: var(--accent); }
+.nav-section { padding: 16px 8px 8px; }
+.nav-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; padding: 0 8px 6px; }
+.nav-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: var(--radius); color: var(--fg); font-size: 13px; cursor: pointer; }
+.nav-item:hover { background: var(--border); }
+.nav-item.active { background: #ddf4ff; color: var(--accent); font-weight: 500; }
+
+/* Main */
+.main { display: flex; flex-direction: column; }
+.page-header { padding: 16px 24px; border-bottom: 1px solid var(--border); background: var(--bg); display: flex; align-items: center; gap: 12px; }
+.breadcrumb { color: var(--muted); font-size: 13px; display: flex; align-items: center; gap: 6px; }
+.breadcrumb a { color: var(--accent); }
+.breadcrumb .sep { color: var(--muted); }
+.page-content { padding: 24px; max-width: 800px; }
+
+/* Form */
+.form-card { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 16px; }
+.form-card-header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px 16px; font-weight: 600; font-size: 14px; }
+.form-card-body { padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-group { display: flex; flex-direction: column; gap: 4px; }
+.form-group.full { grid-column: 1 / -1; }
+label { font-size: 13px; font-weight: 500; color: var(--fg); }
+label .req { color: var(--danger); margin-left: 2px; }
+input[type="text"], input[type="date"], input[type="number"], input[type="url"], textarea, select {
+  border: 1px solid var(--border); border-radius: var(--radius); padding: 5px 12px;
+  font-size: 14px; font-family: var(--font); color: var(--fg); background: var(--bg);
+  width: 100%;
+}
+input:focus, textarea:focus, select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(9,105,218,0.2); }
+textarea { resize: vertical; min-height: 80px; }
+.hint { font-size: 12px; color: var(--muted); }
+
+/* Upload zone */
+.upload-zone { border: 1px dashed var(--border); border-radius: var(--radius); padding: 24px; text-align: center; color: var(--muted); cursor: pointer; background: var(--surface); }
+.upload-zone:hover { border-color: var(--accent); background: #f0f6ff; }
+.upload-icon { font-size: 24px; margin-bottom: 8px; }
+.upload-label { font-size: 13px; }
+.upload-hint { font-size: 12px; margin-top: 4px; }
+
+/* Actions */
+.form-actions { display: flex; align-items: center; gap: 8px; padding: 16px 0; }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 5px 16px; border-radius: var(--radius); font-size: 14px; font-family: var(--font); cursor: pointer; border: 1px solid transparent; font-weight: 500; }
+.btn-primary { background: var(--success); color: #fff; border-color: rgba(31,35,40,0.15); }
+.btn-primary:hover { background: #1a7f37; }
+.btn-default { background: var(--surface); color: var(--fg); border-color: var(--border); }
+.btn-default:hover { background: #f3f4f6; }
+
+/* Status badge preview */
+.status-preview { display: inline-flex; align-items: center; gap: 6px; background: #fff8c5; color: #9a6700; border: 1px solid #d4a72c; border-radius: 9999px; padding: 2px 10px; font-size: 12px; font-weight: 500; }
+
+@media (max-width: 768px) {
+  .app { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .form-row { grid-template-columns: 1fr; }
+  .page-content { padding: 16px; max-width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<div class="proto-nav">
+  <a href="../index.html">← 页面导航</a>
+  <span class="sep">|</span>
+  <span class="proto-label">原型模式</span>
+  <span class="sep">·</span>
+  <span class="proto-label">新建招标项目</span>
+</div>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><rect x="2" y="2" width="7" height="7" rx="1"/><rect x="11" y="2" width="7" height="7" rx="1"/><rect x="2" y="11" width="7" height="7" rx="1"/><rect x="11" y="11" width="7" height="7" rx="1"/></svg>
+      投标管理系统
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">主菜单</div>
+      <a href="dashboard.html" class="nav-item">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+        商机仪表板
+      </a>
+      <div class="nav-item active">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M12 18v-6M9 15h6"/></svg>
+        招标项目
+      </div>
+      <a href="bid-workspace.html" class="nav-item">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        投标工作台
+      </a>
+      <a href="settings.html" class="nav-item">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        组织设置
+      </a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <div class="breadcrumb">
+        <a href="dashboard.html">商机仪表板</a>
+        <span class="sep">/</span>
+        <span>新建招标项目</span>
+      </div>
+    </div>
+
+    <div class="page-content">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <div>
+          <h1 style="font-size:20px;font-weight:600;margin-bottom:4px;">新建招标项目</h1>
+          <p style="color:var(--muted);font-size:13px;">录入招标信息，创建后状态默认为"待决策"</p>
+        </div>
+        <div class="status-preview">● 待决策</div>
+      </div>
+
+      <form id="tenderForm" onsubmit="handleSubmit(event)">
+        <!-- 基本信息 -->
+        <div class="form-card">
+          <div class="form-card-header">基本信息</div>
+          <div class="form-card-body">
+            <div class="form-row">
+              <div class="form-group full">
+                <label>项目名称 <span class="req">*</span></label>
+                <input type="text" placeholder="例：尖东某商业大厦 B2 层装修工程" required id="title">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>业主 / 甲方名称 <span class="req">*</span></label>
+                <input type="text" placeholder="例：XX 地产集团" required id="clientName">
+              </div>
+              <div class="form-group">
+                <label>截标日期 <span class="req">*</span></label>
+                <input type="date" required id="deadline" value="2026-06-30">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>项目地点</label>
+                <input type="text" placeholder="例：香港九龙尖沙咀" id="location">
+              </div>
+              <div class="form-group">
+                <label>预算估算（港元）</label>
+                <input type="number" placeholder="3000000" id="budget" style="font-family:var(--mono);">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>招标来源网址</label>
+              <input type="url" placeholder="https://..." id="sourceUrl">
+              <span class="hint">可选，用于追溯招标来源</span>
+            </div>
+            <div class="form-group">
+              <label>备注</label>
+              <textarea placeholder="例：需提供 BIM 模型，报价需含 5 年维保…" id="notes"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- 招标文件上传 -->
+        <div class="form-card">
+          <div class="form-card-header">招标文件（可选，创建后亦可上传）</div>
+          <div class="form-card-body">
+            <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
+              <div class="upload-icon">📎</div>
+              <div class="upload-label">点击或拖拽上传招标文件</div>
+              <div class="upload-hint">支持 PDF，单文件最大 50 MB</div>
+              <input type="file" id="fileInput" accept=".pdf" style="display:none" onchange="showFile(this)">
+            </div>
+            <div id="fileList" style="display:none;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;font-size:13px;">
+                <span id="fileName" style="color:var(--accent);">📄 文件名.pdf</span>
+                <button type="button" onclick="removeFile()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;">✕ 移除</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">创建招标项目</button>
+          <a href="dashboard.html" class="btn btn-default">取消</a>
+        </div>
+      </form>
+    </div>
+  </main>
+</div>
+
+<script>
+function showFile(input) {
+  if (input.files && input.files[0]) {
+    document.getElementById('fileName').textContent = '📄 ' + input.files[0].name;
+    document.getElementById('fileList').style.display = 'block';
+  }
+}
+function removeFile() {
+  document.getElementById('fileInput').value = '';
+  document.getElementById('fileList').style.display = 'none';
+}
+function handleSubmit(e) {
+  e.preventDefault();
+  const title = document.getElementById('title').value;
+  if (!title.trim()) { alert('请填写项目名称'); return; }
+  // Simulate creation
+  const msg = document.createElement('div');
+  msg.style.cssText = 'position:fixed;top:48px;right:24px;background:#dafbe1;border:1px solid #1a7f37;color:#1a7f37;padding:12px 16px;border-radius:6px;font-size:13px;z-index:9999;';
+  msg.textContent = '✓ 招标项目已创建，正在跳转…';
+  document.body.appendChild(msg);
+  setTimeout(() => { window.location.href = 'tender-detail.html'; }, 1200);
+}
+</script>
+</body>
+</html>

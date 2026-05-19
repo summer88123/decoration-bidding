@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>投标工作台 — 商务标 / 技术标 / 经济标</title>
+<style>
+:root {
+  --bg: #ffffff;
+  --surface: #f6f8fa;
+  --inset: #eaeef2;
+  --fg: #1f2328;
+  --muted: #656d76;
+  --border: #d0d7de;
+  --accent: #0969da;
+  --green: #1a7f37;
+  --green-subtle: #dafbe1;
+  --red: #cf222e;
+  --purple: #8250df;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); font-size: 14px; color: var(--fg); background: var(--bg); }
+.proto-nav { background: #0d1117; color: #e6edf3; font-size: 12px; padding: 6px 16px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 1000; }
+.proto-nav a { color: #58a6ff; text-decoration: none; }
+.proto-nav a:hover { text-decoration: underline; }
+.proto-nav .sep { color: #30363d; }
+.page-header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 24px; }
+.breadcrumb { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+.breadcrumb a { color: var(--accent); text-decoration: none; }
+.header-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.bid-title { font-size: 18px; font-weight: 600; }
+.status-pill { padding: 2px 10px; border-radius: 9999px; font-size: 12px; font-weight: 500; background: #eaeef2; color: var(--muted); }
+.header-meta { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.header-meta span { margin-right: 16px; }
+.btn { display: inline-flex; align-items: center; gap: 4px; padding: 5px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--fg); }
+.btn:hover { background: var(--inset); }
+.btn-primary { background: #1f883d; color: #fff; border-color: rgba(31,35,40,.15); }
+.btn-primary:hover { background: var(--green); }
+.btn-group { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+</style>
+</head>
+<body>
+<div class="proto-nav">
+  <a href="../index.html">← 页面导航</a>
+  <span class="sep">|</span>
+  <span>投标工作台</span>
+  <span class="sep">|</span>
+  <a href="bid-economic.html">→ 经济标工作台</a>
+</div>
+<div class="page-header">
+  <div class="breadcrumb">
+    <a href="dashboard.html">商机仪表板</a> /
+    <a href="tender-detail.html">尖沙咀商业中心翻新工程</a> / 投标工作台
+  </div>
+  <div class="header-row">
+    <div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <span class="bid-title">A 方案投标</span>
+        <span class="status-pill">草稿 DRAFT</span>
+      </div>
+      <div class="header-meta">
+        <span>负责人：张三</span><span>货币：HKD</span><span>更新：2026-05-19 14:30</span>
+      </div>
+    </div>
+    <div class="btn-group">
+      <button class="btn" onclick="alert('导出功能')">⬇ 导出</button>
+      <button class="btn" onclick="showHistory()">历史记录</button>
+      <button class="btn btn-primary" onclick="submitReview()">提交审查</button>
+    </div>
+  </div>
+</div>
+
+<!-- Progress steps -->
+<div style="display:flex;align-items:center;gap:0;padding:10px 24px;background:#fff;border-bottom:1px solid #d0d7de;overflow-x:auto;">
+  <div style="display:flex;align-items:center;gap:6px;white-space:nowrap;"><div style="width:20px;height:20px;border-radius:50%;background:#1a7f37;color:#fff;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;">✓</div><span style="font-size:12px;color:#1a7f37;">创建投标</span></div>
+  <div style="width:32px;height:1px;background:#1a7f37;margin:0 4px;"></div>
+  <div style="display:flex;align-items:center;gap:6px;white-space:nowrap;"><div style="width:20px;height:20px;border-radius:50%;background:#1a7f37;color:#fff;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;">✓</div><span style="font-size:12px;color:#1a7f37;">商务标</span></div>
+  <div style="width:32px;height:1px;background:#d0d7de;margin:0 4px;"></div>
+  <div style="display:flex;align-items:center;gap:6px;white-space:nowrap;"><div style="width:20px;height:20px;border-radius:50%;background:#0969da;color:#fff;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;">3</div><span style="font-size:12px;color:#0969da;font-weight:500;">技术标</span></div>
+  <div style="width:32px;height:1px;background:#d0d7de;margin:0 4px;"></div>
+  <div style="display:flex;align-items:center;gap:6px;white-space:nowrap;"><div style="width:20px;height:20px;border-radius:50%;background:#eaeef2;color:#656d76;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;">4</div><span style="font-size:12px;color:#656d76;">经济标</span></div>
+  <div style="width:32px;height:1px;background:#d0d7de;margin:0 4px;"></div>
+  <div style="display:flex;align-items:center;gap:6px;white-space:nowrap;"><div style="width:20px;height:20px;border-radius:50%;background:#eaeef2;color:#656d76;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;">5</div><span style="font-size:12px;color:#656d76;">提交审查</span></div>
+</div>
+
+<!-- Tab nav -->
+<div style="display:flex;border-bottom:1px solid #d0d7de;padding:0 24px;background:#fff;">
+  <div class="tab" data-tab="commercial" onclick="switchTab('commercial')" style="padding:10px 16px;font-size:14px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;color:#656d76;">商务标 <span style="display:inline-block;padding:1px 6px;border-radius:9999px;font-size:11px;background:#dafbe1;color:#1a7f37;margin-left:4px;">已完成</span></div>
+  <div class="tab active" data-tab="technical" onclick="switchTab('technical')" style="padding:10px 16px;font-size:14px;cursor:pointer;border-bottom:2px solid #0969da;margin-bottom:-1px;color:#1f2328;font-weight:500;">技术标 <span style="display:inline-block;padding:1px 6px;border-radius:9999px;font-size:11px;background:#eaeef2;color:#656d76;margin-left:4px;">进行中</span></div>
+  <div class="tab" data-tab="economic" onclick="switchTab('economic')" style="padding:10px 16px;font-size:14px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;color:#656d76;">经济标 <span style="display:inline-block;padding:1px 6px;border-radius:9999px;font-size:11px;background:#eaeef2;color:#656d76;margin-left:4px;">待填写</span></div>
+</div>
+
+<!-- Main two-column layout -->
+<div style="display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 210px);">
+  <!-- Sidebar -->
+  <div id="sidebar-commercial" class="sidebar-panel" style="border-right:1px solid #d0d7de;padding:16px 0;background:#f6f8fa;display:none;">
+    <div style="font-size:11px;font-weight:600;color:#656d76;text-transform:uppercase;letter-spacing:.04em;padding:4px 16px 8px;">商务标内容</div>
+    <div onclick="showSection('comm-basic')" style="padding:7px 16px;font-size:13px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;" class="sb-item active-sb">公司基本信息<span style="color:#1a7f37;font-size:12px;">✓</span></div>
+    <div onclick="showSection('comm-perf')" style="padding:7px 16px;font-size:13px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;" class="sb-item">业绩案例<span style="color:#1a7f37;font-size:12px;">✓</span></div>
+    <div onclick="showSection('comm-person')" style="padding:7px 16px;font-size:13px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;" class="sb-item">关键人员<span style="color:#1a7f37;font-size:12px;">✓</span></div>
+    <div onclick="showSection('comm-docs')" style="padding:7px 16px;font-size:13px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;" class="sb-item">附件文件<span style="color:#656d76;font-size:12px;">2 份</span></div>
+  </div>
+  <div id="sidebar-technical" class="sidebar-panel" style="border-right:1px solid #d0d7de;padding:16px 0;background:#f6f8fa;">
+    <div style="font-size:11px;font-weight:600;color:#656d76;text-transform:uppercase;letter-spacing:.04em;padding:4px 16px 8px;">技术标内容</div>
+    <div onclick="highlightSb(this,'tech')" style="padding:7px 16px;font-size:13px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:#ddf4ff;color:#0969da;" class="sb-item sb-active">施工方案<span style="color:#0969da;font-size:12px;">编辑中</span></div>
+    <div onclick="highlightSb(this,'tech')" style="padding:7px 16px;font-size:13px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;" class="sb-item">工期计划<span style="color:#9a6700;font-size:12px;">待填</span></div>
+    <div onclick="highlightSb(this,'tech')" style="padding:7px 16px;font-size:13px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;" class="sb-item">安全管理<span style="color:#9a6700;font-size:12px;">待填</span></div>
+    <div onclick="highlightSb(this,'tech')" style="padding:7px 16px;font-size:13px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;" class="sb-item">质量管理<span style="color:#9a6700;font-size:12px;">待填</span></div>
+  </div>
+  <div id="sidebar-economic" class="sidebar-panel" style="border-right:1px solid #d0d7de;padding:16px 0;background:#f6f8fa;display:none;">
+    <div style="font-size:11px;font-weight:600;color:#656d76;text-transform:uppercase;letter-spacing:.04em;padding:4px 16px 8px;">经济标</div>
+    <div style="padding:7px 16px;font-size:13px;color:#656d76;">图纸文件</div>
+    <div style="padding:7px 16px;font-size:13px;color:#656d76;">工程量清单</div>
+    <div style="padding:10px 16px;margin-top:8px;">
+      <a href="bid-economic.html" style="display:block;padding:6px 12px;background:#0969da;color:#fff;border-radius:6px;font-size:13px;text-align:center;text-decoration:none;">打开经济标工作台</a>
+    </div>
+  </div>
+
+  <!-- Content area -->
+  <div style="padding:24px;overflow-y:auto;">
+
+<!-- Commercial tab content (hidden by default) -->
+<div id="content-commercial" style="display:none;">
+  <h2 style="font-size:16px;font-weight:600;margin-bottom:16px;">商务标 — 公司基本信息</h2>
+  <div style="background:#f6f8fa;border:1px solid #d0d7de;border-radius:6px;padding:16px;margin-bottom:16px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div><label style="font-size:12px;color:#656d76;display:block;margin-bottom:4px;">公司名称</label><input type="text" value="ABC 装修工程有限公司" style="width:100%;padding:5px 12px;border:1px solid #d0d7de;border-radius:6px;font-size:13px;"/></div>
+      <div><label style="font-size:12px;color:#656d76;display:block;margin-bottom:4px;">营业执照号</label><input type="text" value="12345678-000-12-26-0" style="width:100%;padding:5px 12px;border:1px solid #d0d7de;border-radius:6px;font-size:13px;"/></div>
+    </div>
+    <div style="margin-top:12px;"><label style="font-size:12px;color:#656d76;display:block;margin-bottom:4px;">公司简介</label><textarea rows="3" style="width:100%;padding:8px 12px;border:1px solid #d0d7de;border-radius:6px;font-size:13px;resize:vertical;">本公司成立于 2010 年，专注于商业室内设计及施工，香港注册承建商，拥有多项专业资质认证。</textarea></div>
+  </div>
+  <h3 style="font-size:14px;font-weight:600;margin-bottom:12px;">资质证书</h3>
+  <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:16px;">
+    <thead><tr style="background:#f6f8fa;"><th style="padding:8px 12px;text-align:left;border:1px solid #d0d7de;font-weight:500;">证书名称</th><th style="padding:8px 12px;text-align:left;border:1px solid #d0d7de;font-weight:500;">编号</th><th style="padding:8px 12px;text-align:left;border:1px solid #d0d7de;font-weight:500;">有效期</th><th style="padding:8px 12px;border:1px solid #d0d7de;width:60px;"></th></tr></thead>
+    <tbody>
+      <tr><td style="padding:8px 12px;border:1px solid #d0d7de;">室内设计师注册证</td><td style="padding:8px 12px;border:1px solid #d0d7de;font-family:var(--mono);font-size:12px;">IDD-001</td><td style="padding:8px 12px;border:1px solid #d0d7de;">2027-12-31</td><td style="padding:8px 12px;border:1px solid #d0d7de;text-align:center;"><span style="color:#cf222e;cursor:pointer;font-size:12px;">删除</span></td></tr>
+      <tr><td style="padding:8px 12px;border:1px solid #d0d7de;">注册承建商牌照</td><td style="padding:8px 12px;border:1px solid #d0d7de;font-family:var(--mono);font-size:12px;">BC-2024-0892</td><td style="padding:8px 12px;border:1px solid #d0d7de;">2026-08-31</td><td style="padding:8px 12px;border:1px solid #d0d7de;text-align:center;"><span style="color:#cf222e;cursor:pointer;font-size:12px;">删除</span></td></tr>
+    </tbody>
+  </table>
+  <button class="btn" style="font-size:12px;">+ 添加证书</button>
+</div>
+
+<!-- Technical tab content (default active) -->
+<div id="content-technical">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+    <h2 style="font-size:16px;font-weight:600;">技术标 — 施工方案</h2>
+    <button class="btn" style="font-size:12px;color:#0969da;border-color:#0969da;" onclick="alert('AI 生成初稿')">✦ AI 生成初稿</button>
+  </div>
+  <div style="background:#f6f8fa;border:1px solid #d0d7de;border-radius:6px;padding:16px;margin-bottom:20px;">
+    <label style="font-size:12px;color:#656d76;display:block;margin-bottom:6px;">施工方法描述</label>
+    <textarea rows="5" style="width:100%;padding:8px 12px;border:1px solid #d0d7de;border-radius:6px;font-size:13px;resize:vertical;line-height:1.6;">采用干法施工工艺，严格执行香港建筑条例第 123 章相关规定。拆除阶段实施封闭施工，减少噪音及粉尘污染。主体结构保留现有钢筋混凝土框架，仅对内部装修部分进行全面更新。</textarea>
+    <label style="font-size:12px;color:#656d76;display:block;margin-top:12px;margin-bottom:6px;">主要施工工序</label>
+    <textarea rows="4" style="width:100%;padding:8px 12px;border:1px solid #d0d7de;border-radius:6px;font-size:13px;resize:vertical;line-height:1.6;">1. 前期准备与场地围封（第 1–7 天）
+2. 拆除现有装修面层及清运（第 8–21 天）
+3. 水电隐蔽工程（第 22–42 天）
+4. 轻体隔墙及吊顶（第 43–65 天）
+5. 面层装修及收尾（第 66–85 天）</textarea>
+    <label style="font-size:12px;color:#656d76;display:block;margin-top:12px;margin-bottom:6px;">特殊工艺说明</label>
+    <textarea rows="3" style="width:100%;padding:8px 12px;border:1px solid #d0d7de;border-radius:6px;font-size:13px;resize:vertical;" placeholder="如有特殊施工工艺，请在此说明…"></textarea>
+  </div>
+
+  <h3 style="font-size:14px;font-weight:600;margin-bottom:12px;">工期计划</h3>
+  <div style="background:#f6f8fa;border:1px solid #d0d7de;border-radius:6px;padding:16px;margin-bottom:20px;">
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:14px;flex-wrap:wrap;">
+      <div><label style="font-size:12px;color:#656d76;display:block;margin-bottom:4px;">总工期（天）</label><input type="number" value="90" style="width:100px;padding:5px 12px;border:1px solid #d0d7de;border-radius:6px;font-size:13px;"/></div>
+      <div style="flex:1;min-width:200px;"><label style="font-size:12px;color:#656d76;display:block;margin-bottom:4px;">预计开工日期</label><input type="date" value="2026-07-01" style="padding:5px 12px;border:1px solid #d0d7de;border-radius:6px;font-size:13px;"/></div>
+    </div>
+    <label style="font-size:12px;color:#656d76;display:block;margin-bottom:8px;">里程碑计划</label>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead><tr style="background:#eaeef2;"><th style="padding:7px 12px;text-align:left;border:1px solid #d0d7de;font-weight:500;">阶段名称</th><th style="padding:7px 12px;text-align:right;border:1px solid #d0d7de;font-weight:500;">开始天</th><th style="padding:7px 12px;text-align:right;border:1px solid #d0d7de;font-weight:500;">结束天</th><th style="padding:7px 12px;border:1px solid #d0d7de;width:60px;"></th></tr></thead>
+      <tbody id="milestone-body">
+        <tr><td style="padding:7px 12px;border:1px solid #d0d7de;"><input type="text" value="拆除及准备" style="border:none;font-size:13px;width:100%;"/></td><td style="padding:7px 12px;border:1px solid #d0d7de;"><input type="number" value="1" style="border:none;font-size:13px;width:60px;text-align:right;font-family:var(--mono);"/></td><td style="padding:7px 12px;border:1px solid #d0d7de;"><input type="number" value="14" style="border:none;font-size:13px;width:60px;text-align:right;font-family:var(--mono);"/></td><td style="padding:7px 12px;border:1px solid #d0d7de;text-align:center;"><span style="color:#cf222e;cursor:pointer;">✕</span></td></tr>
+        <tr><td style="padding:7px 12px;border:1px solid #d0d7de;"><input type="text" value="水电工程" style="border:none;font-size:13px;width:100%;"/></td><td style="padding:7px 12px;border:1px solid #d0d7de;"><input type="number" value="15" style="border:none;font-size:13px;width:60px;text-align:right;font-family:var(--mono);"/></td><td style="padding:7px 12px;border:1px solid #d0d7de;"><input type="number" value="35" style="border:none;font-size:13px;width:60px;text-align:right;font-family:var(--mono);"/></td><td style="padding:7px 12px;border:1px solid #d0d7de;text-align:center;"><span style="color:#cf222e;cursor:pointer;">✕</span></td></tr>
+        <tr><td style="padding:7px 12px;border:1px solid #d0d7de;"><input type="text" value="装修工程" style="border:none;font-size:13px;width:100%;"/></td><td style="padding:7px 12px;border:1px solid #d0d7de;"><input type="number" value="36" style="border:none;font-size:13px;width:60px;text-align:right;font-family:var(--mono);"/></td><td style="padding:7px 12px;border:1px solid #d0d7de;"><input type="number" value="80" style="border:none;font-size:13px;width:60px;text-align:right;font-family:var(--mono);"/></td><td style="padding:7px 12px;border:1px solid #d0d7de;text-align:center;"><span style="color:#cf222e;cursor:pointer;">✕</span></td></tr>
+        <tr><td style="padding:7px 12px;border:1px solid #d0d7de;"><input type="text" value="收尾验收" style="border:none;font-size:13px;width:100%;"/></td><td style="padding:7px 12px;border:1px solid #d0d7de;"><input type="number" value="81" style="border:none;font-size:13px;width:60px;text-align:right;font-family:var(--mono);"/></td><td style="padding:7px 12px;border:1px solid #d0d7de;"><input type="number" value="90" style="border:none;font-size:13px;width:60px;text-align:right;font-family:var(--mono);"/></td><td style="padding:7px 12px;border:1px solid #d0d7de;text-align:center;"><span style="color:#cf222e;cursor:pointer;">✕</span></td></tr>
+      </tbody>
+    </table>
+    <button class="btn" style="margin-top:10px;font-size:12px;" onclick="addMilestone()">+ 添加里程碑</button>
+  </div>
+
+  <h3 style="font-size:14px;font-weight:600;margin-bottom:12px;">安全与质量管理</h3>
+  <div style="background:#f6f8fa;border:1px solid #d0d7de;border-radius:6px;padding:16px;margin-bottom:20px;">
+    <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:8px;"><button class="btn" style="font-size:12px;color:#0969da;border-color:#0969da;" onclick="alert('AI 生成')">✦ AI 生成</button></div>
+    <label style="font-size:12px;color:#656d76;display:block;margin-bottom:6px;">安全措施描述</label>
+    <textarea rows="4" style="width:100%;padding:8px 12px;border:1px solid #d0d7de;border-radius:6px;font-size:13px;resize:vertical;line-height:1.6;" placeholder="例如：严格遵守香港建筑安全条例…"></textarea>
+    <label style="font-size:12px;color:#656d76;display:block;margin-top:12px;margin-bottom:6px;">质量控制方案</label>
+    <textarea rows="4" style="width:100%;padding:8px 12px;border:1px solid #d0d7de;border-radius:6px;font-size:13px;resize:vertical;line-height:1.6;" placeholder="例如：实行三检制度（自检、互检、专检）…"></textarea>
+  </div>
+
+  <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
+    <button class="btn">保存草稿</button>
+    <button class="btn btn-primary" onclick="alert('已保存，切换至经济标')">保存并下一步 →</button>
+  </div>
+</div>
+
+<!-- Economic tab content (hidden) -->
+<div id="content-economic" style="display:none;">
+  <div style="padding:40px;text-align:center;color:#656d76;">
+    <div style="font-size:32px;margin-bottom:12px;">📊</div>
+    <div style="font-size:16px;font-weight:600;color:#1f2328;margin-bottom:8px;">经济标工作台</div>
+    <p style="font-size:13px;margin-bottom:20px;">经济标采用左右分屏布局，左侧工程量清单，右侧图纸查看器</p>
+    <a href="bid-economic.html" style="display:inline-block;padding:8px 20px;background:#0969da;color:#fff;border-radius:6px;font-size:13px;text-decoration:none;">打开经济标工作台 →</a>
+  </div>
+</div>
+
+  </div><!-- end content area -->
+</div><!-- end main grid -->
+
+<script>
+function switchTab(tab) {
+  ['commercial','technical','economic'].forEach(t => {
+    document.getElementById('content-' + t).style.display = t === tab ? 'block' : 'none';
+    document.getElementById('sidebar-' + t).style.display = t === tab ? 'block' : 'none';
+  });
+  document.querySelectorAll('.tab').forEach(el => {
+    el.style.borderBottomColor = 'transparent';
+    el.style.color = '#656d76';
+    el.style.fontWeight = 'normal';
+    el.classList.remove('active');
+    if (el.dataset.tab === tab) {
+      el.style.borderBottomColor = '#0969da';
+      el.style.color = '#1f2328';
+      el.style.fontWeight = '500';
+      el.classList.add('active');
+    }
+  });
+}
+function highlightSb(el, group) {
+  document.querySelectorAll('.sb-item').forEach(i => { i.style.background = ''; i.style.color = '#1f2328'; });
+  el.style.background = '#ddf4ff';
+  el.style.color = '#0969da';
+}
+function addMilestone() {
+  const tbody = document.getElementById('milestone-body');
+  const row = document.createElement('tr');
+  row.innerHTML = '<td style="padding:7px 12px;border:1px solid #d0d7de;"><input type="text" placeholder="阶段名称" style="border:none;font-size:13px;width:100%;"/></td><td style="padding:7px 12px;border:1px solid #d0d7de;"><input type="number" placeholder="1" style="border:none;font-size:13px;width:60px;text-align:right;font-family:monospace;"/></td><td style="padding:7px 12px;border:1px solid #d0d7de;"><input type="number" placeholder="30" style="border:none;font-size:13px;width:60px;text-align:right;font-family:monospace;"/></td><td style="padding:7px 12px;border:1px solid #d0d7de;text-align:center;"><span style="color:#cf222e;cursor:pointer;" onclick="this.closest(\'tr\').remove()">✕</span></td>';
+  tbody.appendChild(row);
+}
+function submitReview() {
+  if (confirm('确认提交审查？提交后状态将变为「审查中」。')) {
+    document.querySelector('.status-pill').textContent = '审查中 IN_REVIEW';
+    document.querySelector('.status-pill').style.background = '#fff8c5';
+    document.querySelector('.status-pill').style.color = '#9a6700';
+    alert('已提交审查，等待管理层批准。');
+  }
+}
+function showHistory() {
+  alert('状态历史：\n2026-05-15 14:00 张三创建投标 DRAFT\n2026-05-18 09:30 张三更新商务标');
+}
+</script>
+</body>
+</html>
