@@ -14,8 +14,8 @@ interface DrawingRegion {
 
 interface Props {
   items: BidItemData[]
-  selectedId?: string
-  onSelect: (item: BidItemData) => void
+  selectedIndex?: number | null
+  onSelect: (item: BidItemData, index: number) => void
 }
 
 function parseRegion(raw?: string): DrawingRegion | null {
@@ -29,7 +29,7 @@ function parseRegion(raw?: string): DrawingRegion | null {
 
 const BOTTOM_THRESHOLD = 60 // px，距离底部多少以内算"在底部"
 
-export function BidItemTable({ items, selectedId, onSelect }: Props) {
+export function BidItemTable({ items, selectedIndex, onSelect }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null)
   // 记录是否"贴近底部"，用 ref 避免触发额外 render
   const isAtBottomRef = useRef(true)
@@ -77,7 +77,7 @@ export function BidItemTable({ items, selectedId, onSelect }: Props) {
         <tbody>
           {items.map((item, idx) => {
             const region = parseRegion(item.drawingRegion)
-            const isSelected = item.id === selectedId
+            const isSelected = selectedIndex === idx
             return (
               <tr
                 key={item.id ?? idx}
@@ -86,7 +86,7 @@ export function BidItemTable({ items, selectedId, onSelect }: Props) {
                     ? 'bg-blue-50 border-blue-200'
                     : 'hover:bg-gray-50'
                 }`}
-                onClick={() => onSelect(item)}
+                onClick={() => onSelect(item, idx)}
               >
                 <td className="px-3 py-2 text-gray-400">{idx + 1}</td>
                 <td className="px-3 py-2 font-medium text-gray-800">{item.itemName}</td>

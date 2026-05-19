@@ -35,6 +35,7 @@ interface Props {
 export function BidWorkspace({ bidId }: Props) {
   const { state, localFileUrl, uploadFile } = useBidDocument(bidId)
   const [selectedItem, setSelectedItem] = useState<BidItemData | null>(null)
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   function handleFileDrop(e: React.DragEvent) {
@@ -129,8 +130,8 @@ export function BidWorkspace({ bidId }: Props) {
                 )}
                 <BidItemTable
                   items={state.items}
-                  selectedId={selectedItem?.id}
-                  onSelect={setSelectedItem}
+                  selectedIndex={selectedIndex}
+                  onSelect={(item, idx) => { setSelectedItem(item); setSelectedIndex(idx) }}
                 />
               </>
             )}
