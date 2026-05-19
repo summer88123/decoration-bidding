@@ -9,7 +9,7 @@
     "lint": "turbo run lint",
     "test": "turbo run test",
     "clean": "turbo run clean",
-    "infra:up": "docker compose -f docker-compose.infra.yml up -d",
+    "infra:up": "docker compose -f docker-compose.infra.yml up -d --remove-orphans",
     "infra:down": "docker compose -f docker-compose.infra.yml down",
     "dev:all": "docker compose up -d"
   },

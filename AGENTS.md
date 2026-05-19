@@ -4,6 +4,8 @@
 
 请使用中文回复。
 
+write 工具写入时有 bug，每次不要写入太长的数据，建议 100 行左右写入一次
+
 ---
 
 ## 项目概览
@@ -38,16 +40,16 @@ decoration-bidding/
 
 ## 技术栈
 
-| 层级 | 技术 |
-|------|------|
-| 前端 | Next.js 14 App Router, React 18, TypeScript, TailwindCSS, shadcn/ui |
-| 后端 API | Node.js, Fastify 4, TypeScript, Prisma ORM |
-| AI 服务 | LangGraph JS, Vercel AI SDK, pgvector RAG |
-| BIM/IFC | Python 3.11, FastAPI, IfcOpenShell |
-| 数据库 | PostgreSQL 16 + pgvector, Redis 7 |
-| 消息队列 | BullMQ（基于 Redis） |
-| 文件存储 | S3-compatible（开发用 MinIO） |
-| 构建 | pnpm workspaces + Turborepo |
+| 层级     | 技术                                                                |
+| -------- | ------------------------------------------------------------------- |
+| 前端     | Next.js 14 App Router, React 18, TypeScript, TailwindCSS, shadcn/ui |
+| 后端 API | Node.js, Fastify 4, TypeScript, Prisma ORM                          |
+| AI 服务  | LangGraph JS, Vercel AI SDK, pgvector RAG                           |
+| BIM/IFC  | Python 3.11, FastAPI, IfcOpenShell                                  |
+| 数据库   | PostgreSQL 16 + pgvector, Redis 7                                   |
+| 消息队列 | BullMQ（基于 Redis）                                                |
+| 文件存储 | S3-compatible（开发用 MinIO）                                       |
+| 构建     | pnpm workspaces + Turborepo                                         |
 
 ---
 
@@ -63,6 +65,7 @@ decoration-bidding/
 ### Node.js 服务（Fastify）
 
 每个服务结构：
+
 ```
 src/
 ├── index.ts          # 启动入口，仅调用 buildApp()
@@ -75,6 +78,7 @@ src/
 ```
 
 # core-service 额外结构（模块化单体）：
+
 ```
 src/
 ├── modules/
@@ -133,12 +137,12 @@ import { prisma } from '@decoration-bidding/database'
 
 ## 服务间通信
 
-| 模式 | 用途 | 实现 |
-|------|------|------|
-| REST | 前端直连 core-service:8080 | HTTP → core-service |
-| HTTP | core-service 调用 ai-agent-service / bim-service | 内部服务间直接 HTTP |
-| BullMQ | 异步任务（爬虫→AI→通知） | BullMQ（基于 Redis） |
-| WebSocket | AI 进度流、语音流 | Socket.io + @fastify/websocket |
+| 模式      | 用途                                             | 实现                           |
+| --------- | ------------------------------------------------ | ------------------------------ |
+| REST      | 前端直连 core-service:8080                       | HTTP → core-service            |
+| HTTP      | core-service 调用 ai-agent-service / bim-service | 内部服务间直接 HTTP            |
+| BullMQ    | 异步任务（爬虫→AI→通知）                         | BullMQ（基于 Redis）           |
+| WebSocket | AI 进度流、语音流                                | Socket.io + @fastify/websocket |
 
 **BullMQ 队列命名约定**：`<source>.<event>`，如 `tender.raw`、`bid.generated`
 
@@ -180,15 +184,15 @@ pnpm dev
 
 ## 命名规范
 
-| 对象 | 规范 | 示例 |
-|------|------|------|
-| 文件名 | kebab-case | `bid-item.ts` |
-| 类 | PascalCase | `BidItemService` |
-| 函数/变量 | camelCase | `getBidItems()` |
-| 常量 | UPPER_SNAKE | `MAX_FILE_SIZE` |
-| 数据库表 | snake_case | `bid_items` |
-| API 路径 | kebab-case | `/api/bid-items` |
-| RabbitMQ 队列 | dot.notation | `tender.raw` |
+| 对象          | 规范         | 示例             |
+| ------------- | ------------ | ---------------- |
+| 文件名        | kebab-case   | `bid-item.ts`    |
+| 类            | PascalCase   | `BidItemService` |
+| 函数/变量     | camelCase    | `getBidItems()`  |
+| 常量          | UPPER_SNAKE  | `MAX_FILE_SIZE`  |
+| 数据库表      | snake_case   | `bid_items`      |
+| API 路径      | kebab-case   | `/api/bid-items` |
+| RabbitMQ 队列 | dot.notation | `tender.raw`     |
 
 ---
 

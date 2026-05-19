@@ -1,12 +1,12 @@
 // apps/web/src/app/api/bids/[bidId]/documents/[docId]/stream/route.ts
-// Next.js API Route：直连 bid-service，管道转发 SSE 流
-// 绕过 gateway（gateway 的 @fastify/http-proxy 使用 undici，会缓冲 SSE 响应）
+// Next.js API Route：直连 core-service，管道转发 SSE 流
+// 绕过 gateway（@fastify/http-proxy 使用 undici，会缓冲 SSE 响应）
 
 import type { NextRequest } from 'next/server'
 import { Agent, fetch as undiciFetch } from 'undici'
 
-// 直连 bid-service（服务器端，无 CORS 问题）
-const BID_SERVICE_URL = process.env.BID_SERVICE_URL || 'http://localhost:3003'
+// 直连 core-service（服务器端，无 CORS 问题）
+const CORE_SERVICE_URL = process.env.CORE_SERVICE_URL || 'http://localhost:8080'
 // bodyTimeout:0 防止长时间 AI 处理时 undici body timeout 中断连接
 const longRunningAgent = new Agent({ bodyTimeout: 0, headersTimeout: 60_000 })
 
@@ -15,7 +15,7 @@ export async function GET(
   { params }: { params: Promise<{ bidId: string; docId: string }> },
 ) {
   const { bidId, docId } = await params
-  const upstream = `${BID_SERVICE_URL}/bids/${bidId}/documents/${docId}/stream`
+  const upstream = `${CORE_SERVICE_URL}/api/bids/${bidId}/documents/${docId}/stream`
 
   let upstreamRes: Awaited<ReturnType<typeof undiciFetch>>
   try {

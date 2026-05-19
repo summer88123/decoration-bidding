@@ -54,7 +54,31 @@ stop_all() {
   info "全部服务已停止"
 }
 
+start_infra() {
+  info "启动基础设施（postgres / redis / minio）..."
+  # 移除无 compose 标签的孤立同名容器，避免 container_name 冲突
+  for cname in db-postgres db-redis db-minio; do
+    if docker inspect "$cname" &>/dev/null; then
+      project_label=$(docker inspect --format '{{index .Config.Labels "com.docker.compose.project"}}' "$cname" 2>/dev/null || true)
+      if [[ -z "$project_label" ]]; then
+        warn "发现孤立容器 ${cname}（无 compose 标签），自动移除..."
+        docker rm -f "${cname}" 2>/dev/null || true
+      fi
+    fi
+  done
+  docker compose -f "$ROOT/docker-compose.infra.yml" up -d --remove-orphans
+  info "等待数据库就绪..."
+  sleep 3
+  # 初始化 schema 并写入演示种子数据
+  (cd "$ROOT/packages/database" && pnpm db:push --skip-generate 2>&1 | tail -2) || true
+  TSX=$(find "$ROOT" -path "*/node_modules/.bin/tsx" | head -1)
+  if [[ -n "$TSX" ]]; then
+    (cd "$ROOT/packages/database" && "$TSX" prisma/seed.ts 2>&1) || true
+  fi
+}
+
 start_all() {
+  start_infra
   mkdir -p "$LOGS"
   info "启动 web (port 3000)..."
   nohup pnpm --filter web dev > "$LOGS/web.log" 2>&1 &

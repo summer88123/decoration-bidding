@@ -31,10 +31,10 @@ export function useBidDocument(bidId: string) {
   const connectSSE = useCallback(
     (docId: string) => {
       closeSSE()
-      // 直连 bid-service（绕过 Next.js rewrite 和 gateway，两者都会缓冲 SSE 响应）
-      // bid-service 已设 Access-Control-Allow-Origin: *，CORS 无问题
-      const BID_SERVICE_URL = process.env.NEXT_PUBLIC_BID_SERVICE_URL ?? 'http://localhost:3003'
-      const es = new EventSource(`${BID_SERVICE_URL}/bids/${bidId}/documents/${docId}/stream`)
+      // 直连 core-service（绕过 Next.js rewrite，两者都会缓冲 SSE 响应）
+      // core-service 已设 Access-Control-Allow-Origin: *，CORS 无问题
+      const CORE_SERVICE_URL = process.env.NEXT_PUBLIC_CORE_SERVICE_URL ?? 'http://localhost:8080'
+      const es = new EventSource(`${CORE_SERVICE_URL}/api/bids/${bidId}/documents/${docId}/stream`)
       esRef.current = es
 
       es.onmessage = (e: MessageEvent<string>) => {
