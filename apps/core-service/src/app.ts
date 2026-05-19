@@ -7,6 +7,7 @@ import jwt from '@fastify/jwt'
 import multipart from '@fastify/multipart'
 import { config } from './config.js'
 import { errorHandler } from './shared/middleware/error.js'
+import { bidRoutes } from './modules/bid/routes.js'
 
 const isProd = process.env.NODE_ENV === 'production'
 const isTTY = process.stdout.isTTY === true
@@ -39,7 +40,7 @@ export async function buildApp() {
   // 健康检查
   app.get('/health', async () => ({ status: 'ok', service: 'core-service' }))
 
-  // TODO: 在后续 Task 中逐步注册各 module 路由
+  await app.register(bidRoutes)
 
   return app
 }
