@@ -1,0 +1,45 @@
+// apps/core-service/src/app.ts
+import Fastify from 'fastify'
+import cors from '@fastify/cors'
+import helmet from '@fastify/helmet'
+import rateLimit from '@fastify/rate-limit'
+import jwt from '@fastify/jwt'
+import multipart from '@fastify/multipart'
+import { config } from './config.js'
+import { errorHandler } from './shared/middleware/error.js'
+
+const isProd = process.env.NODE_ENV === 'production'
+const isTTY = process.stdout.isTTY === true
+
+export async function buildApp() {
+  const app = Fastify({
+    logger: isProd
+      ? { level: config.LOG_LEVEL }
+      : {
+          level: config.LOG_LEVEL,
+          transport: {
+            target: 'pino-pretty',
+            options: {
+              colorize: isTTY,
+              translateTime: 'SYS:yyyy-mm-dd HH:MM:ss',
+              ignore: 'pid,hostname',
+            },
+          },
+        },
+  })
+
+  await app.register(helmet)
+  await app.register(cors, { origin: config.CORS_ORIGIN })
+  await app.register(rateLimit, { max: 100, timeWindow: '1 minute' })
+  await app.register(jwt, { secret: config.JWT_SECRET })
+  await app.register(multipart, { limits: { fileSize: 50 * 1024 * 1024 } })
+
+  app.setErrorHandler(errorHandler)
+
+  // 健康检查
+  app.get('/health', async () => ({ status: 'ok', service: 'core-service' }))
+
+  // TODO: 在后续 Task 中逐步注册各 module 路由
+
+  return app
+}
