@@ -6,21 +6,15 @@ include:
   - docker-compose.infra.yml
 
 x-node-service: &node-service
-  build:
-    context: .
-    dockerfile: infra/docker/node.Dockerfile
   environment:
     DATABASE_URL: postgresql://postgres:postgres@postgres:5432/decoration_bidding
     REDIS_URL: redis://redis:6379
-    RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
     JWT_SECRET: dev-secret-change-in-production
     NODE_ENV: development
   depends_on:
     postgres:
       condition: service_healthy
     redis:
-      condition: service_healthy
-    rabbitmq:
       condition: service_healthy
 
 services:
@@ -32,57 +26,21 @@ services:
     ports:
       - '3000:3000'
     environment:
-      NEXT_PUBLIC_API_URL: http://gateway:8080
+      NEXT_PUBLIC_API_URL: http://localhost:8080
 
-  gateway:
+  core-service:
     <<: *node-service
     build:
       context: .
-      dockerfile: apps/gateway/Dockerfile
+      dockerfile: apps/core-service/Dockerfile
     ports:
       - '8080:8080'
     environment:
       PORT: '8080'
-      USER_SERVICE_URL: http://user-service:3001
-      TENDER_SERVICE_URL: http://tender-service:3002
-      BID_SERVICE_URL: http://bid-service:3003
-      SCRAPER_SERVICE_URL: http://scraper-service:3004
-      AI_AGENT_SERVICE_URL: http://ai-agent-service:3005
-      NOTIFY_SERVICE_URL: http://notify-service:3006
-      VOICE_SERVICE_URL: http://voice-service:3007
       BIM_SERVICE_URL: http://bim-service:3008
-
-  user-service:
-    <<: *node-service
-    build:
-      context: .
-      dockerfile: apps/user-service/Dockerfile
-    ports:
-      - '3001:3001'
-
-  tender-service:
-    <<: *node-service
-    build:
-      context: .
-      dockerfile: apps/tender-service/Dockerfile
-    ports:
-      - '3002:3002'
-
-  bid-service:
-    <<: *node-service
-    build:
-      context: .
-      dockerfile: apps/bid-service/Dockerfile
-    ports:
-      - '3003:3003'
-
-  scraper-service:
-    <<: *node-service
-    build:
-      context: .
-      dockerfile: apps/scraper-service/Dockerfile
-    ports:
-      - '3004:3004'
+      AI_AGENT_SERVICE_URL: http://ai-agent-service:3005
+      STORAGE_DRIVER: local
+      BASE_URL: http://localhost:8080
 
   ai-agent-service:
     <<: *node-service
@@ -95,22 +53,6 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
 
-  notify-service:
-    <<: *node-service
-    build:
-      context: .
-      dockerfile: apps/notify-service/Dockerfile
-    ports:
-      - '3006:3006'
-
-  voice-service:
-    <<: *node-service
-    build:
-      context: .
-      dockerfile: apps/voice-service/Dockerfile
-    ports:
-      - '3007:3007'
-
   bim-service:
     build:
       context: .
@@ -119,7 +61,6 @@ services:
       - '3008:3008'
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/decoration_bidding
-      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
       S3_ENDPOINT: http://minio:9000
       S3_ACCESS_KEY: minioadmin
       S3_SECRET_KEY: minioadmin
