@@ -46,13 +46,13 @@ export async function buildApp() {
   // 健康检查
   app.get('/health', async () => ({ status: 'ok', service: 'core-service' }))
 
-  await app.register(bidRoutes)
-  await app.register(authRoutes)
-  await app.register(userRoutes)
-  await app.register(tenderRoutes)
-  await app.register(scraperRoutes)
-  await app.register(notifyRoutes)
-  await app.register(voiceRoutes)
+  await app.register(bidRoutes, { prefix: '/api' })
+  await app.register(authRoutes, { prefix: '/api' })
+  await app.register(userRoutes, { prefix: '/api' })
+  await app.register(tenderRoutes, { prefix: '/api' })
+  await app.register(scraperRoutes, { prefix: '/api' })
+  await app.register(notifyRoutes, { prefix: '/api' })
+  await app.register(voiceRoutes, { prefix: '/api' })
 
   return app
 }
