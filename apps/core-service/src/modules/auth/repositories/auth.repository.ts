@@ -19,6 +19,8 @@ export async function createUser(data: {
   passwordHash: string
   companyId: string
   roleId: string
+  name?: string
+  phone?: string
 }) {
   return prisma.user.create({ data, include: { role: true } })
 }

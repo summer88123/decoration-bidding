@@ -25,6 +25,9 @@ model Company {
   regions      String[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  address      String?
+  contactEmail String?
+  contactPhone String?
 
   users          User[]
   tenderProjects TenderProject[]
@@ -43,6 +46,8 @@ model User {
   id           String   @id @default(cuid())
   companyId    String
   email        String   @unique
+  name         String   @default("")
+  phone        String?
   passwordHash String
   roleId       String
   status       String   @default("active")
