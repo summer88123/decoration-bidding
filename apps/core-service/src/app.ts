@@ -37,7 +37,12 @@ export async function buildApp() {
   })
 
   await app.register(helmet)
-  await app.register(cors, { origin: config.CORS_ORIGIN })
+  await app.register(cors, {
+    origin: config.CORS_ORIGIN === '*'
+      ? ['http://localhost:3000', 'http://localhost:3001']
+      : config.CORS_ORIGIN.split(',').map((s) => s.trim()),
+    credentials: true,
+  })
   await app.register(rateLimit, { max: 100, timeWindow: '1 minute' })
   await app.register(jwt, {
     secret: {
