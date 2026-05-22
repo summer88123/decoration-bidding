@@ -2,7 +2,7 @@
 
 // ─── 用户与公司 ────────────────────────────────────────────────
 
-export type UserRole = 'management' | 'bid-owner'
+export type UserRole = 'COMPANY_ADMIN' | 'MANAGER' | 'BIDDER' | 'SUPER_ADMIN'
 
 export interface Company {
   id: string

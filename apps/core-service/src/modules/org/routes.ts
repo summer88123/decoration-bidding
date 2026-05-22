@@ -41,18 +41,18 @@ export const orgRoutes: FastifyPluginAsync = async (app) => {
 
   // Company
   app.get('/org/company', { preHandler: [requireAuth] }, getCompanyHandler)
-  app.put('/org/company', { preHandler: [requireAuth, requireRole(['management'])] }, updateCompanyHandler)
+  app.put('/org/company', { preHandler: [requireAuth, requireRole(['COMPANY_ADMIN'])] }, updateCompanyHandler)
 
   // Members
-  app.get('/org/members', { preHandler: [requireAuth, requireRole(['management'])] }, listMembersHandler)
-  app.post('/org/members/invite', { preHandler: [requireAuth, requireRole(['management'])] }, inviteMemberHandler)
-  app.put('/org/members/:userId', { preHandler: [requireAuth, requireRole(['management'])] }, updateMemberHandler)
-  app.delete('/org/members/:userId', { preHandler: [requireAuth, requireRole(['management'])] }, deleteMemberHandler)
+  app.get('/org/members', { preHandler: [requireAuth, requireRole(['COMPANY_ADMIN', 'MANAGER'])] }, listMembersHandler)
+  app.post('/org/members/invite', { preHandler: [requireAuth, requireRole(['COMPANY_ADMIN'])] }, inviteMemberHandler)
+  app.put('/org/members/:userId', { preHandler: [requireAuth, requireRole(['COMPANY_ADMIN'])] }, updateMemberHandler)
+  app.delete('/org/members/:userId', { preHandler: [requireAuth, requireRole(['COMPANY_ADMIN'])] }, deleteMemberHandler)
 
   // Materials
   app.get('/org/materials', { preHandler: [requireAuth] }, listMaterialsHandler)
-  app.post('/org/materials', { preHandler: [requireAuth, requireRole(['management'])] }, createMaterialHandler)
-  app.put('/org/materials/:id', { preHandler: [requireAuth, requireRole(['management'])] }, updateMaterialHandler)
-  app.delete('/org/materials/:id', { preHandler: [requireAuth, requireRole(['management'])] }, deleteMaterialHandler)
-  app.post('/org/materials/import', { preHandler: [requireAuth, requireRole(['management'])] }, importMaterialsHandler)
+  app.post('/org/materials', { preHandler: [requireAuth, requireRole(['COMPANY_ADMIN', 'MANAGER'])] }, createMaterialHandler)
+  app.put('/org/materials/:id', { preHandler: [requireAuth, requireRole(['COMPANY_ADMIN', 'MANAGER'])] }, updateMaterialHandler)
+  app.delete('/org/materials/:id', { preHandler: [requireAuth, requireRole(['COMPANY_ADMIN'])] }, deleteMaterialHandler)
+  app.post('/org/materials/import', { preHandler: [requireAuth, requireRole(['COMPANY_ADMIN', 'MANAGER'])] }, importMaterialsHandler)
 }

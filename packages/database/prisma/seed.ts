@@ -5,6 +5,13 @@ import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 
 async function main() {
+  // 0. 创建基础角色
+  await prisma.role.upsert({ where: { name: 'COMPANY_ADMIN' }, update: {}, create: { name: 'COMPANY_ADMIN', permissions: ['*'] } })
+  await prisma.role.upsert({ where: { name: 'MANAGER' }, update: {}, create: { name: 'MANAGER', permissions: ['bid:read', 'bid:write', 'tender:read'] } })
+  await prisma.role.upsert({ where: { name: 'BIDDER' }, update: {}, create: { name: 'BIDDER', permissions: ['bid:read', 'bid:write'] } })
+  await prisma.role.upsert({ where: { name: 'SUPER_ADMIN' }, update: {}, create: { name: 'SUPER_ADMIN', permissions: ['*'] } })
+  console.log('✓ Roles created')
+
   // 1. 创建演示公司
   const company = await prisma.company.upsert({
     where: { id: 'demo-company' },
