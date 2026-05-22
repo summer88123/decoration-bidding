@@ -23,6 +23,14 @@ export async function refreshHandler(request: FastifyRequest, reply: FastifyRepl
     maxAge: config.REFRESH_TOKEN_TTL,
   })
 
+  reply.setCookie('logged_in', '1', {
+    httpOnly: false,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    path: '/',
+    maxAge: config.REFRESH_TOKEN_TTL,
+  })
+
   return reply.send({
     success: true,
     data: {

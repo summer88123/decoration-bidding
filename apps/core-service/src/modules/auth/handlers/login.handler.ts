@@ -21,6 +21,16 @@ export async function loginHandler(request: FastifyRequest, reply: FastifyReply)
     maxAge: config.REFRESH_TOKEN_TTL,
   })
 
+  // 设置无 path 限制的标记 cookie，供 proxy.ts 路由保护使用
+  // 不含敏感信息，仅作为"已登录"标志
+  reply.setCookie('logged_in', '1', {
+    httpOnly: false,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    path: '/',
+    maxAge: config.REFRESH_TOKEN_TTL,
+  })
+
   return reply.send({
     success: true,
     data: {

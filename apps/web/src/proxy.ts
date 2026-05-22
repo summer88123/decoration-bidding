@@ -16,7 +16,9 @@ export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
   if (shouldSkip(pathname)) return NextResponse.next()
 
-  const hasRefreshToken = request.cookies.has('refresh_token')
+  // 检查 logged_in 标记 cookie（path='/'，所有请求都会携带）
+  // refresh_token 的 path='/api/auth/refresh'，proxy 无法读取
+  const hasRefreshToken = request.cookies.has('logged_in')
 
   if (isPublicPath(pathname) && hasRefreshToken) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
