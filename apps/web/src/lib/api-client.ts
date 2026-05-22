@@ -2,7 +2,11 @@
 import axios, { type AxiosRequestConfig, type InternalAxiosRequestConfig } from 'axios'
 import { useAuthStore } from '@/stores/auth-store'
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080'
+// 使用相对路径，通过 Next.js rewrites 代理到 core-service
+// 这样 cookie 统一设置在 localhost:3000 域，proxy.ts 可以正确读取
+const BASE_URL = typeof window === 'undefined'
+  ? (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080')
+  : ''
 
 export const apiClient = axios.create({
   baseURL: BASE_URL,
