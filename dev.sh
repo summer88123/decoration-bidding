@@ -108,7 +108,7 @@ status_all() {
     name="${entry%%|*}"
     url="${entry##*|}"
     port=$(port_of "$name")
-    code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 3 "$url" 2>/dev/null || echo "000")
+    code=$(curl -s -o /dev/null -w "%{http_code}" -L --max-time 3 "$url" 2>/dev/null || echo "000")
     if [[ "$code" == "200" ]]; then
       echo -e "  ${GREEN}✓${NC} $name (port $port)"
     else
