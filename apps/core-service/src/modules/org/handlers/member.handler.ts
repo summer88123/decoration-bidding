@@ -2,6 +2,14 @@ import type { FastifyRequest, FastifyReply } from 'fastify'
 import { z } from 'zod'
 import * as svc from '../services/org.service.js'
 
+type MemberWithRole = {
+  id: string
+  name: string
+  email: string
+  status: string
+  role: { name: string }
+}
+
 const listMembersQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
@@ -26,7 +34,7 @@ export async function listMembersHandler(req: FastifyRequest, reply: FastifyRepl
   const totalPages = Math.ceil(total / query.pageSize)
   return reply.send({
     success: true,
-    data: items.map((u: any) => ({
+    data: items.map((u: MemberWithRole) => ({
       id: u.id,
       name: u.name,
       email: u.email,
