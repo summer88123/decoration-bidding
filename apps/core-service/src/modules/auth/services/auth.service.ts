@@ -30,7 +30,7 @@ export async function register(data: {
   if (existing) throw new AuthError('EMAIL_TAKEN', '邮箱已被注册', 409)
 
   const passwordHash = await bcrypt.hash(data.password, SALT_ROUNDS)
-  const user = await repo.createUser({ ...data, passwordHash })
+  const user = await repo.createUser({ email: data.email, companyId: data.companyId, roleId: data.roleId, passwordHash })
   return user
 }
 
