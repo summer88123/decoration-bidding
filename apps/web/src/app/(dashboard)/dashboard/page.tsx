@@ -1,4 +1,4 @@
-// apps/web/src/app/dashboard/page.tsx
+// apps/web/src/app/(dashboard)/dashboard/page.tsx
 import Link from 'next/link'
 
 export default function DashboardPage() {

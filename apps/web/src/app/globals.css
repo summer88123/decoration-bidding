@@ -1,3 +1,77 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ============================================================
+   设计令牌 — 来源于原型 CSS 变量（docs/prototype/screens/）
+   ============================================================ */
+@layer base {
+  :root {
+    /* 背景色 */
+    --bg: #ffffff;
+    --surface: #f6f8fa;
+    --inset: #eaeef2;
+
+    /* 文字色 */
+    --fg: #1f2328;
+    --muted: #656d76;
+
+    /* 边框 */
+    --border: #d0d7de;
+
+    /* 品牌/强调色 */
+    --accent: #0969da;
+    --accent-hover: #0550ae;
+
+    /* 语义色 */
+    --success: #1a7f37;
+    --success-subtle: #dafbe1;
+    --danger: #cf222e;
+    --danger-subtle: #ffebe9;
+    --warning: #9a6700;
+    --warning-subtle: #fff8c5;
+    --done: #8250df;
+    --done-subtle: #fbefff;
+
+    /* 字体 */
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans",
+      "Noto Sans CJK SC", Helvetica, Arial, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+      monospace;
+
+    /* 圆角 */
+    --radius: 6px;
+  }
+}
+
+/* ============================================================
+   基础样式重置
+   ============================================================ */
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-sans);
+  }
+
+  /* 链接默认色 */
+  a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  a:hover {
+    text-decoration: underline;
+  }
+}
