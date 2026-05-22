@@ -16,7 +16,7 @@
 
 ---
 
-## 阶段 0：基础设施就绪
+## 阶段 0：基础设施就绪 ✅
 
 > 预计时长：1-2 天
 
@@ -26,81 +26,74 @@
 
 ### 任务清单
 
-- [ ] 复制 `.env.example` 为 `.env`，填写以下必填项：
-  - `DATABASE_URL`（PostgreSQL 连接串）
-  - `REDIS_URL`
-  - `JWT_SECRET` / `JWT_REFRESH_SECRET`
-  - `S3_ENDPOINT` / `S3_ACCESS_KEY` / `S3_SECRET_KEY`（本地用 MinIO）
-- [ ] 启动基础设施容器：`pnpm run infra:up`
-- [ ] 执行数据库迁移与客户端生成：
-  ```bash
-  cd packages/database
-  pnpm db:migrate
-  pnpm db:generate
-  ```
-- [ ] 启动全部服务并验证无报错：`pnpm dev`
-- [ ] 验证各服务端口可访问：
-  - core-service：`http://localhost:8080/health`
-  - ai-agent-service：`http://localhost:3005/health`
-  - bim-service：`http://localhost:3008/health`
-  - web：`http://localhost:3000`
-- [ ] 验证 BIM 服务 IFC 解析接口可调用
+- [x] 复制 `.env.example` 为 `.env`，填写以下必填项
+- [x] 启动基础设施容器：`./dev.sh start`
+- [x] 执行数据库迁移与客户端生成
+- [x] 启动全部服务并验证无报错
+- [x] 验证各服务端口可访问（core-service / ai-agent-service / bim-service / web）
 
 ### 完成标准
 
-`pnpm dev` 启动后四个服务均无错误退出，Health Check 全部返回 200。
+✅ `./dev.sh start` 启动后四个服务均可访问，Health Check 全部返回 200。
 
 ---
 
-## 阶段 1：认证模块
+## 阶段 1：认证模块 ✅
 
 > 预计时长：3-4 天
 > 依赖：阶段 0 完成
+> **实际完成日期：2026-05-22**
 
 ### 后端（`core-service/src/modules/auth`）
 
-- [ ] `auth.repository.ts`
+- [x] `auth.repository.ts`
   - User CRUD（createUser、findByEmail、findById）
-  - RefreshToken 黑名单（saveToken、revokeToken、isRevoked）
-- [ ] `auth.service.ts`
-  - `register`：创建用户，发送验证邮件
-  - `login`：验证密码，颁发 accessToken（15min）+ refreshToken（7d）
-  - `refreshToken`：验证 refreshToken 有效性，颁发新 accessToken
-  - `logout`：将 refreshToken 加入黑名单
+  - RefreshToken / PasswordResetToken CRUD
+- [x] `auth.service.ts`
+  - `register`：创建用户（含公司创建）
+  - `login`：验证密码，颁发 accessToken（15min）+ refreshToken（7d），登录失败计数（Redis）
+  - `refreshTokens`：验证 refreshToken，Rotation 机制，颁发新双 Token
+  - `logout`：将 refreshToken 加入 Redis 黑名单
   - `forgotPassword`：生成重置 token，发送重置邮件
   - `resetPassword`：验证重置 token，更新密码
-- [ ] `auth.handlers/`
-  - `POST /api/auth/register`
-  - `POST /api/auth/login`
-  - `POST /api/auth/refresh`
-  - `POST /api/auth/logout`
-  - `POST /api/auth/forgot-password`
-  - `POST /api/auth/reset-password`
-- [ ] 邮件发送（NodeMailer / SendGrid）：
-  - 邀请邮件、邮箱验证邮件、密码重置邮件
-- [ ] 完善 `core-service/src/shared/middleware/auth.ts`：
-  - 从 Authorization header 提取 JWT，验证签名与过期时间
-  - 将 `userId`、`role` 注入 `request.user`
+- [x] `token.service.ts`：JWT 签发/验证（RS256，开发降级 HS256）+ Redis 黑名单
+- [x] `mail.service.ts`：Nodemailer 邮件发送
+- [x] `auth.handlers/`
+  - `POST /api/auth/register` ✅
+  - `POST /api/auth/login` ✅
+  - `POST /api/auth/refresh` ✅
+  - `POST /api/auth/logout` ✅
+  - `POST /api/auth/forgot-password` ✅
+  - `POST /api/auth/reset-password` ✅
+- [x] 完善 `core-service/src/shared/middleware/auth.ts`：RS256 验证 + requireRole 辅助
 
 ### 前端（`apps/web`）
 
-- [ ] `src/stores/auth.store.ts`（见状态管理规范）
-- [ ] `src/middleware.ts`：
-  - 未登录用户重定向到 `/login`
-  - 已登录用户访问 `/login` 时重定向到 `/dashboard`
-- [ ] `src/lib/api-client.ts`：
+- [x] `src/stores/auth-store.ts`（Zustand，AccessToken 存内存）
+- [x] `src/proxy.ts`（Next.js 16 路由保护，检查 `logged_in` cookie）
+- [x] `src/lib/api-client.ts`：
   - 请求拦截器：自动附加 `Authorization: Bearer <token>`
-  - 响应拦截器：401 时调用 `/api/auth/refresh`，成功后重试原请求；
-    refresh 失败则调用 `clearAuth()` 并跳转 `/login`
-- [ ] `app/(auth)/login/page.tsx`：邮箱 + 密码登录表单
-- [ ] `app/(auth)/register/page.tsx`：注册表单（姓名、邮箱、密码、公司名）
-- [ ] `app/(auth)/forgot-password/page.tsx`：找回密码表单
+  - 响应拦截器：401 时调用 `/api/auth/refresh`，成功后重试；refresh 失败则跳 `/login`
+  - 并发防抖（多个 401 只发一次刷新请求）
+- [x] `app/(auth)/login/page.tsx`：邮箱 + 密码登录表单
+- [x] `app/(auth)/register/page.tsx`：注册表单（公司名、邮箱、密码）
+- [x] `app/(auth)/forgot-password/page.tsx`：找回密码表单
+- [x] `app/(dashboard)/dashboard/page.tsx`：登录后落地页
+- [x] `components/auth-provider.tsx`：页面加载时静默刷新 Token
+
+### 已修复的问题
+
+- CORS credentials 模式：将 `origin: '*'` 改为具体域名 + `credentials: true`
+- `@fastify/cookie` 版本：降级至 v8.x（兼容 Fastify 4.x）
+- Next.js 16 breaking change：`middleware.ts` → `proxy.ts`
+- cross-port cookie：前端改用相对路径，通过 Next.js `rewrites` 代理
+- `logged_in` 标记 cookie：解决 `refresh_token` path 限制导致 proxy 无法读取的问题
 
 ### 完成标准
 
-- 可通过注册→登录→刷新→登出完整流程
-- 未登录访问受保护路由自动重定向
-- Token 过期后自动静默刷新，用户无感知
+✅ 可通过注册→登录→跳转 Dashboard→登出完整流程
+✅ 未登录访问受保护路由自动重定向到 `/login`
+✅ Token 过期后自动静默刷新，用户无感知
 
 ---
 
