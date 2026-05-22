@@ -97,23 +97,24 @@
 
 ---
 
-## 阶段 2：组织管理模块
+## 阶段 2：组织管理模块 ✅
 
 > 预计时长：2-3 天
+> **实际完成日期：2026-05-22**
 > 依赖：阶段 1 完成（需要认证中间件）
 
 ### 后端（`core-service/src/modules/org`）
 
-- [ ] `org.repository.ts`
+- [x] `org.repository.ts`
   - Company：`findByIdOrThrow`、`update`
   - Member：`listByCompany`、`inviteMember`、`updateRole`、`removeMember`
   - Material：`list`（支持分页+搜索）、`create`、`update`、`delete`、批量导入
-- [ ] `org.service.ts`
+- [x] `org.service.ts`
   - 公司信息更新（名称、联系人、资质证书）
   - 成员邀请（发送邀请邮件，生成邀请 token）
   - 成员角色变更（仅 ADMIN 可操作）
   - 物料库 CRUD + Excel 批量导入（解析 xlsx）
-- [ ] `org.handlers/`
+- [x] `org.handlers/`
   - `GET/PUT /api/org/company`
   - `GET /api/org/members`
   - `POST /api/org/members/invite`
@@ -125,7 +126,7 @@
 
 ### 前端（`apps/web`）
 
-- [ ] `app/(dashboard)/settings/page.tsx`（含三个子 Tab）：
+- [x] `app/(dashboard)/settings/page.tsx`（含三个子 Tab）：
   - **公司资料 Tab**：公司名、联系人、资质证书上传
   - **成员管理 Tab**：成员列表，邀请成员，修改角色，移除成员
   - **物料库 Tab**：物料列表（分页+搜索），新增/编辑/删除，Excel 批量导入
