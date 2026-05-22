@@ -134,6 +134,10 @@ export async function deleteMaterial(id: string, companyId: string) {
   return prisma.materialDb.delete({ where: { id, companyId } })
 }
 
+export async function findMaterialById(id: string, companyId: string) {
+  return prisma.materialDb.findFirst({ where: { id, companyId } })
+}
+
 export async function bulkCreateMaterials(
   items: Array<{
     companyId: string

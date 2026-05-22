@@ -1,7 +1,10 @@
 import { randomBytes } from 'crypto'
 import bcrypt from 'bcrypt'
+import { Prisma } from '@decoration-bidding/database'
 import * as repo from '../repositories/org.repository.js'
 import { sendInviteEmail } from '../../auth/services/mail.service.js'
+
+const SALT_ROUNDS = 10
 
 // ---------------------------------------------------------------------------
 // Error
@@ -58,7 +61,7 @@ export async function inviteMember(
   if (!roleRecord) throw new OrgError('VALIDATION_ERROR', '角色不存在', 400)
 
   const tempPassword = randomBytes(8).toString('hex')
-  const passwordHash = await bcrypt.hash(tempPassword, 10)
+  const passwordHash = await bcrypt.hash(tempPassword, SALT_ROUNDS)
 
   let user: Awaited<ReturnType<typeof repo.createPendingUser>>
   try {
@@ -70,8 +73,11 @@ export async function inviteMember(
       passwordHash,
       status: 'pending',
     })
-  } catch {
-    throw new OrgError('DUPLICATE', '该邮箱已被注册', 409)
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+      throw new OrgError('DUPLICATE', '该邮箱已被注册', 409)
+    }
+    throw err
   }
 
   try {
@@ -130,19 +136,15 @@ export async function updateMaterial(
   id: string,
   data: { name?: string; spec?: string; unitCost?: number; supplier?: string; category?: string }
 ) {
-  try {
-    return await repo.updateMaterial(companyId, id, data)
-  } catch {
-    throw new OrgError('NOT_FOUND', '物料不存在', 404)
-  }
+  const existing = await repo.findMaterialById(id, companyId)
+  if (!existing) throw new OrgError('NOT_FOUND', '物料不存在', 404)
+  return repo.updateMaterial(id, companyId, data)
 }
 
 export async function deleteMaterial(companyId: string, id: string) {
-  try {
-    return await repo.deleteMaterial(companyId, id)
-  } catch {
-    throw new OrgError('NOT_FOUND', '物料不存在', 404)
-  }
+  const existing = await repo.findMaterialById(id, companyId)
+  if (!existing) throw new OrgError('NOT_FOUND', '物料不存在', 404)
+  await repo.deleteMaterial(id, companyId)
 }
 
 export async function importMaterials(
@@ -164,7 +166,9 @@ export async function importMaterials(
     valid.push(row)
   })
 
-  await repo.bulkCreateMaterials(valid.map((row) => ({ ...row, companyId })))
+  if (valid.length > 0) {
+    await repo.bulkCreateMaterials(valid.map((row) => ({ ...row, companyId })))
+  }
 
   return { imported: valid.length, skipped: errors.length, errors }
 }
