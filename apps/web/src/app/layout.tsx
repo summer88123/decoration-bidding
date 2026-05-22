@@ -1,8 +1,7 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter } from 'next/font/google'
 import './globals.css'
-
-const inter = Inter({ subsets: ['latin'] })
+import { Toaster } from '@/components/ui/toaster'
+import { AuthProvider } from '@/components/auth-provider'
 
 export const metadata: Metadata = {
   title: '投标辅助系统',
@@ -19,7 +18,12 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="zh-HK">
-      <body className={inter.className}>{children}</body>
+      <body>
+        <AuthProvider>
+          {children}
+        </AuthProvider>
+        <Toaster />
+      </body>
     </html>
   )
 }
