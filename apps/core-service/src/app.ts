@@ -38,7 +38,13 @@ export async function buildApp() {
   await app.register(helmet)
   await app.register(cors, { origin: config.CORS_ORIGIN })
   await app.register(rateLimit, { max: 100, timeWindow: '1 minute' })
-  await app.register(jwt, { secret: config.JWT_SECRET })
+  await app.register(jwt, {
+    secret: {
+      private: config.RS256_PRIVATE_KEY || 'dev-secret',
+      public: config.RS256_PUBLIC_KEY || 'dev-secret',
+    },
+    sign: { algorithm: config.RS256_PRIVATE_KEY ? 'RS256' : 'HS256' },
+  })
   await app.register(multipart, { limits: { fileSize: 50 * 1024 * 1024 } })
 
   app.setErrorHandler(errorHandler)

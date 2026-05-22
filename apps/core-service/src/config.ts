@@ -2,7 +2,6 @@
 export const config = {
   PORT: Number(process.env.PORT) || 8080,
   LOG_LEVEL: process.env.LOG_LEVEL || 'info',
-  JWT_SECRET: process.env.JWT_SECRET || 'dev-secret-change-in-production',
   DATABASE_URL: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/decoration_bidding',
   REDIS_URL: process.env.REDIS_URL || 'redis://localhost:6379',
   STORAGE_DRIVER: process.env.STORAGE_DRIVER || 'local',
@@ -11,4 +10,15 @@ export const config = {
   BIM_SERVICE_URL: process.env.BIM_SERVICE_URL || 'http://localhost:3008',
   AI_AGENT_SERVICE_URL: process.env.AI_AGENT_SERVICE_URL || 'http://localhost:3005',
   CORS_ORIGIN: process.env.CORS_ORIGIN || '*',
+  RS256_PRIVATE_KEY: process.env.RS256_PRIVATE_KEY || '',
+  RS256_PUBLIC_KEY: process.env.RS256_PUBLIC_KEY || '',
+  ACCESS_TOKEN_TTL: 15 * 60,
+  REFRESH_TOKEN_TTL: 7 * 24 * 3600,
+  SMTP_HOST: process.env.SMTP_HOST || 'smtp.mailtrap.io',
+  SMTP_PORT: Number(process.env.SMTP_PORT) || 587,
+  SMTP_USER: process.env.SMTP_USER || '',
+  SMTP_PASS: process.env.SMTP_PASS || '',
+  SMTP_FROM: process.env.SMTP_FROM || 'noreply@decoration-bidding.com',
+  LOGIN_MAX_FAILURES: 5,
+  LOGIN_LOCK_TTL: 30 * 60,
 } as const
