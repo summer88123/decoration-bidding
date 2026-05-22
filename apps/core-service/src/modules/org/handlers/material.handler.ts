@@ -87,7 +87,7 @@ export async function importMaterialsHandler(req: FastifyRequest, reply: Fastify
   const sheet = workbook.Sheets[sheetName]
   const rows = xlsx.utils.sheet_to_json<Record<string, unknown>>(sheet)
 
-  const mapped: MappedRow[] = rows.map(row => ({
+  const mapped: MappedRow[] = rows.map((row: Record<string, unknown>) => ({
     name: String(row['名称'] ?? row['name'] ?? ''),
     spec: row['规格'] != null ? String(row['规格']) : (row['spec'] != null ? String(row['spec']) : undefined),
     unitCost: Number(row['单价'] ?? row['unitCost'] ?? 0),

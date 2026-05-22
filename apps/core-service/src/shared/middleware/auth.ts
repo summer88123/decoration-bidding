@@ -46,7 +46,7 @@ export async function requireAuth(request: FastifyRequest, reply: FastifyReply) 
   }
 }
 
-export function requireRole(allowedRoles: UserRole[]) {
+export function requireRole(allowedRoles: string[]) {
   return async (request: FastifyRequest, reply: FastifyReply) => {
     if (!request.authUser || !allowedRoles.includes(request.authUser.role)) {
       return reply.status(403).send({
