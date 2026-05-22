@@ -16,9 +16,9 @@ export async function registerHandler(request: FastifyRequest, reply: FastifyRep
   const company = await prisma.company.create({
     data: { name: body.companyName, regions: [] },
   })
-  let role = await prisma.role.findFirst({ where: { name: 'bid-owner' } })
+  const role = await prisma.role.findFirst({ where: { name: 'COMPANY_ADMIN' } })
   if (!role) {
-    role = await prisma.role.create({ data: { name: 'bid-owner', permissions: [] } })
+    throw new Error('COMPANY_ADMIN 角色未初始化，请先运行数据库 seed')
   }
 
   const user = await authSvc.register({
