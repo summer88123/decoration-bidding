@@ -15,6 +15,7 @@
     "@decoration-bidding/database": "workspace:*",
     "@decoration-bidding/shared-types": "workspace:*",
     "@decoration-bidding/shared-utils": "workspace:^",
+    "@fastify/cookie": "^11.0.2",
     "@fastify/cors": "^9.0.0",
     "@fastify/helmet": "^11.0.0",
     "@fastify/jwt": "^8.0.0",

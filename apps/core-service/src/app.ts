@@ -5,6 +5,7 @@ import helmet from '@fastify/helmet'
 import rateLimit from '@fastify/rate-limit'
 import jwt from '@fastify/jwt'
 import multipart from '@fastify/multipart'
+import cookie from '@fastify/cookie'
 import { config } from './config.js'
 import { errorHandler } from './shared/middleware/error.js'
 import { bidRoutes } from './modules/bid/routes.js'
@@ -46,6 +47,7 @@ export async function buildApp() {
     sign: { algorithm: config.RS256_PRIVATE_KEY ? 'RS256' : 'HS256' },
   })
   await app.register(multipart, { limits: { fileSize: 50 * 1024 * 1024 } })
+  await app.register(cookie)
 
   app.setErrorHandler(errorHandler)
 
