@@ -56,8 +56,9 @@ export async function createPendingUser(data: {
   passwordHash: string
   status: string
 }) {
+  // TODO(Task 8): 移除 as any，schema 添加 name/phone 字段后直接传入即可
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return prisma.user.create({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     data: data as any,
     include: { role: true },
   })
@@ -143,5 +144,5 @@ export async function bulkCreateMaterials(
     category?: string
   }>,
 ) {
-  return prisma.materialDb.createMany({ data: items, skipDuplicates: false })
+  return prisma.materialDb.createMany({ data: items })
 }
