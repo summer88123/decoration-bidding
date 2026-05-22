@@ -1,4 +1,4 @@
-// apps/web/src/middleware.ts
+// apps/web/src/proxy.ts
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
@@ -12,7 +12,7 @@ function shouldSkip(pathname: string) {
   return SKIP_PATHS.some((p) => pathname.startsWith(p))
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
   if (shouldSkip(pathname)) return NextResponse.next()
 
