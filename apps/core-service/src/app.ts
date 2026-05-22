@@ -15,6 +15,7 @@ import { tenderRoutes } from './modules/tender/routes.js'
 import { scraperRoutes } from './modules/scraper/routes.js'
 import { notifyRoutes } from './modules/notify/routes.js'
 import { voiceRoutes } from './modules/voice/routes.js'
+import { orgRoutes } from './modules/org/routes.js'
 
 const isProd = process.env.NODE_ENV === 'production'
 const isTTY = process.stdout.isTTY === true
@@ -66,6 +67,7 @@ export async function buildApp() {
   await app.register(scraperRoutes, { prefix: '/api' })
   await app.register(notifyRoutes, { prefix: '/api' })
   await app.register(voiceRoutes, { prefix: '/api' })
+  await app.register(orgRoutes, { prefix: '/api' })
 
   return app
 }
