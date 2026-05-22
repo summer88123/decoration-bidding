@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>装修投标辅助系统 — 项目文档</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", Helvetica, Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #1f2328;
+  background: #f6f8fa;
+  min-height: 100vh;
+}
+.topbar {
+  background: #24292f;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.topbar-title {
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.topbar-title:hover { color: #cdd9e5; }
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 48px 24px;
+}
+.hero {
+  text-align: center;
+  margin-bottom: 56px;
+}
+.hero h1 {
+  font-size: 32px;
+  font-weight: 700;
+  color: #1f2328;
+  margin-bottom: 12px;
+}
+.hero p {
+  color: #656d76;
+  font-size: 16px;
+}
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 48px;
+}
+@media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+.card {
+  background: #fff;
+  border: 1px solid #d0d7de;
+  border-radius: 12px;
+  padding: 28px;
+  text-decoration: none;
+  color: inherit;
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+.card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  border-color: #0969da;
+}
+.card-icon {
+  font-size: 36px;
+  margin-bottom: 14px;
+}
+.card h2 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #0969da;
+}
+.card p {
+  color: #656d76;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.section-title {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #656d76;
+  margin-bottom: 16px;
+}
+.story-list {
+  background: #fff;
+  border: 1px solid #d0d7de;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.story-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 20px;
+  text-decoration: none;
+  color: #1f2328;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.1s;
+}
+.story-item:last-child { border-bottom: none; }
+.story-item:hover { background: #f6f8fa; }
+.story-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #ddf4ff;
+  color: #0969da;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.story-name {
+  font-weight: 500;
+  font-size: 14px;
+}
+.story-desc {
+  color: #656d76;
+  font-size: 13px;
+  margin-left: auto;
+}
+footer {
+  text-align: center;
+  color: #8c959f;
+  font-size: 13px;
+  margin-top: 56px;
+  padding-bottom: 32px;
+}
+footer a { color: #0969da; text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a class="topbar-title" href="#">装修投标辅助系统</a>
+</div>
+<div class="container">
+  <div class="hero">
+    <h1>项目文档</h1>
+    <p>香港建筑及室内设计行业 AI 驱动投标辅助系统</p>
+  </div>
+
+  <div class="grid">
+    <a class="card" href="prototype/index.html">
+      <div class="card-icon">🖥️</div>
+      <h2>UI 原型</h2>
+      <p>交互式界面原型，涵盖登录、仪表盘、招标管理、投标工作台等核心页面。</p>
+    </a>
+    <a class="card" href="story/index.html">
+      <div class="card-icon">📖</div>
+      <h2>用户故事</h2>
+      <p>系统功能用户故事文档，包含数据模型、认证、组织、招标及投标模块。</p>
+    </a>
+  </div>
+
+  <div class="section-title">用户故事目录</div>
+  <div class="story-list">
+    <a class="story-item" href="story/index.html#data-model">
+      <span class="story-num">00</span>
+      <span class="story-name">数据模型</span>
+      <span class="story-desc">核心实体与关系</span>
+    </a>
+    <a class="story-item" href="story/index.html#auth">
+      <span class="story-num">01</span>
+      <span class="story-name">认证模块</span>
+      <span class="story-desc">登录 / 注册 / JWT</span>
+    </a>
+    <a class="story-item" href="story/index.html#org">
+      <span class="story-num">02</span>
+      <span class="story-name">组织管理</span>
+      <span class="story-desc">团队与权限</span>
+    </a>
+    <a class="story-item" href="story/index.html#tender">
+      <span class="story-num">03</span>
+      <span class="story-name">招标管理</span>
+      <span class="story-desc">招标发布与跟踪</span>
+    </a>
+    <a class="story-item" href="story/index.html#bid">
+      <span class="story-num">04</span>
+      <span class="story-name">投标模块</span>
+      <span class="story-desc">AI 辅助投标生成</span>
+    </a>
+  </div>
+
+  <footer>
+    <p>decoration-bidding &nbsp;·&nbsp; <a href="https://github.com/summer88123/decoration-bidding">GitHub</a></p>
+  </footer>
+</div>
+</body>
+</html>
