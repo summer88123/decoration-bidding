@@ -1,7 +1,7 @@
 # 开发路线图
 
 > 香港建筑及室内设计投标辅助系统 — 分阶段实施计划
-> 最后更新：2026-05-22
+> 最后更新：2026-05-23
 
 ---
 
@@ -100,7 +100,7 @@
 ## 阶段 2：组织管理模块 ✅
 
 > 预计时长：2-3 天
-> **实际完成日期：2026-05-22**
+> **实际完成日期：2026-05-23**
 > 依赖：阶段 1 完成（需要认证中间件）
 
 ### 后端（`core-service/src/modules/org`）
@@ -137,12 +137,21 @@
 - 可邀请成员并通过邮件链接完成注册
 - 物料库支持 Excel 导入并展示导入结果
 
+### 已修复的问题（2026-05-23）
+
+- `core-service` dev 脚本未加载 `.env`，SMTP 配置无效 → 添加 `--env-file=../../.env`
+- `.env` 中 `STORAGE_DRIVER=./files` 错误值导致启动崩溃 → 修正为 `local`
+- `mail.service.ts` 添加 `smtpConfigured` 检查，未配置时优雅跳过而非报错
+- `org.service.ts` 改为异步发送邀请邮件，不阻塞成员创建主流程
+- `MembersTab` 增加最后管理员保护（活跃 COMPANY_ADMIN 仅剩一人时禁用移除按钮）
+
 ---
 
 ## 阶段 3：招标项目管理
 
 > 预计时长：3-4 天
 > 依赖：阶段 2 完成
+> **当前状态：未开始**（`tender` 模块仅有 stub 路由，前端无 tenders 页面）
 
 ### 后端（`core-service/src/modules/tender`）
 
@@ -185,6 +194,7 @@
 
 > 预计时长：5-7 天
 > 依赖：阶段 3 完成
+> **当前状态：骨架存在，未完成**（`bid/handlers/document.handler.ts` 可用；前端 `bids/[id]/page.tsx` 骨架存在，三标 Tab 尚未实现）
 
 ### 后端（`core-service/src/modules/bid`）
 
@@ -308,9 +318,9 @@
 | `core-service/modules/bid/services/document.service.ts` | ✅ 可用 | 文件存储业务逻辑 |
 | `core-service/modules/bid/storage/` | ✅ 可用 | S3/本地存储抽象层 |
 | `core-service/queues/` | ✅ 可用 | BullMQ 队列定义与 Worker 框架 |
-| `core-service/shared/middleware/auth.ts` | ⚠️ 需完善 | JWT 验证骨架，缺少黑名单检查 |
+| `core-service/shared/middleware/auth.ts` | ✅ 可用 | JWT 验证 + Redis 黑名单已实现 |
 | `web/src/components/bid/` | ✅ 可用 | BidWorkspace 组件骨架已就绪 |
-| `web/src/lib/api-client.ts` | ⚠️ 需完善 | 缺少 Token 自动刷新拦截器 |
+| `web/src/lib/api-client.ts` | ✅ 可用 | Token 自动刷新拦截器已完成 |
 | `bim-service` | ✅ 完整 | IFC/PDF 解析功能全部完成 |
 | `packages/database` | ✅ 完整 | Prisma Schema 已定义所有表结构 |
 | `packages/shared-types` | ⚠️ 需补充 | 需添加 `ErrorCode` 枚举 |
