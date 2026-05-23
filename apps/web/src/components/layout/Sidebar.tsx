@@ -1,8 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { Settings } from 'lucide-react'
+import { usePathname, useRouter } from 'next/navigation'
+import { Settings, LogOut } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/stores/auth-store'
 
@@ -47,7 +47,14 @@ const managementItems = [
 
 export function Sidebar() {
   const pathname = usePathname()
+  const router = useRouter()
   const user = useAuthStore((s) => s.user)
+  const clearAuth = useAuthStore((s) => s.clearAuth)
+
+  const handleLogout = () => {
+    clearAuth()
+    router.push('/login')
+  }
 
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(href + '/')
@@ -127,6 +134,13 @@ export function Sidebar() {
                 {user.email}
               </div>
             </div>
+            <button
+              onClick={handleLogout}
+              title="退出登录"
+              className="ml-auto p-1 text-muted hover:text-fg hover:bg-inset rounded-[4px] transition-colors shrink-0"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
       )}
