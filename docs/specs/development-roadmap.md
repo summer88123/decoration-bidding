@@ -151,42 +151,74 @@
 
 > 预计时长：3-4 天
 > 依赖：阶段 2 完成
-> **当前状态：未开始**（`tender` 模块仅有 stub 路由，前端无 tenders 页面）
+> **实际完成日期：2026-05-23**
 
-### 后端（`core-service/src/modules/tender`）
+### 功能点拆分
 
-- [ ] `tender.repository.ts`
-  - CRUD：`create`、`findById`、`listByCompany`（分页+筛选）、`update`、`delete`
-  - 状态流转：`updateStatus`（草稿→发布→截止→归档）
-- [ ] `tender.service.ts`
-  - 创建招标项目（关联公司、设置截止日期）
-  - 文件附件上传（调用 S3/MinIO，复用 `document.service.ts`）
-  - 招标搜索与筛选（按状态、金额区间、截止日期）
-- [ ] `tender.handlers/`
-  - `GET /api/tenders`（列表，支持分页+筛选）
-  - `POST /api/tenders`
-  - `GET /api/tenders/:id`
-  - `PUT /api/tenders/:id`
-  - `DELETE /api/tenders/:id`
-  - `POST /api/tenders/:id/attachments`（文件上传）
-  - `DELETE /api/tenders/:id/attachments/:fileId`
+#### T1 — `tender.repository.ts`（数据层）
+- [x] `create(data)`：创建招标项目，关联 companyId
+- [x] `findById(id, companyId)`：按 ID 查询（含权限隔离）
+- [x] `listByCompany(companyId, options)`：分页列表，支持 status / search / sortBy / deadline 筛选
+- [x] `update(id, data)`：更新招标字段
+- [x] `delete(id)`：删除招标（仅 PENDING 状态可删）
+- [x] `updateStatus(id, status)`：状态流转（PENDING → DECIDED → BIDDING → SUBMITTED → WON/LOST/DECLINED）
+- [ ] `attachDocument(tenderId, docData)`：关联文件记录（暂用 rawDocumentUrl）
+- [ ] `removeDocument(docId)`：删除文件记录
+- [ ] `listDocuments(tenderId)`：获取文件列表
 
-### 前端（`apps/web`）
+#### T2 — `tender.service.ts`（业务层）
+- [x] `createTender(companyId, dto)`：创建招标项目
+- [x] `getTender(id, companyId)`：获取详情（含权限校验）
+- [x] `listTenders(companyId, query)`：分页查询封装
+- [x] `updateTender(id, companyId, dto)`：编辑招标（仅 PENDING/DECIDED 状态可编辑）
+- [x] `deleteTender(id, companyId)`：删除招标（仅 PENDING 状态）
+- [x] `decideTender(id, companyId, decision, reason)`：投标/放弃决策（BID → BIDDING, DECLINE → DECLINED）
+- [x] `uploadDocument(tenderId, file, fileType)`：上传招标文件到本地存储
+- [ ] `deleteDocument(tenderId, docId, companyId)`：删除招标文件（待 TenderDocument 表独立）
 
-- [ ] `app/(dashboard)/tenders/page.tsx`：
-  - 招标列表（卡片视图），状态筛选，搜索框
-  - 创建招标快捷按钮
-- [ ] `app/(dashboard)/tenders/new/page.tsx`：
-  - 新建招标表单（标题、描述、预算范围、截止日期、附件上传）
-- [ ] `app/(dashboard)/tenders/[id]/page.tsx`：
-  - 招标详情（基本信息、附件列表、关联投标列表）
-  - AI 匹配评分展示区（阶段 5 接入）
+#### T3 — `tender.handlers/`（路由层）
+- [x] `GET /api/tenders` — 招标列表（page/status/search/sort）
+- [x] `POST /api/tenders` — 创建招标
+- [x] `GET /api/tenders/:id` — 招标详情
+- [x] `PUT /api/tenders/:id` — 编辑招标
+- [x] `DELETE /api/tenders/:id` — 删除招标
+- [x] `POST /api/tenders/:id/decide` — 投标/放弃决策
+- [x] `POST /api/tenders/:id/documents` — 上传招标文件
+- [x] `GET /api/tenders/:id/documents` — 获取文件列表
+- [x] `DELETE /api/tenders/:id/documents/:docId` — 删除招标文件
+
+#### T4 — 路由注册
+- [x] 更新 `tender/routes.ts`：注册所有 handlers
+- [x] 在 `core-service/src/app.ts` 中挂载 tender 路由（已存在）
+
+#### T5 — 前端：招标列表页 `tenders/page.tsx`
+- [x] 招标卡片列表（标题、预算、截止日期、状态 Badge）
+- [x] 状态筛选 Tabs（全部/待决策/投标中/已提交/已中标/已落标/已放弃）
+- [x] 搜索框（标题关键字）
+- [x] 「新建招标」按钮
+- [x] 空状态展示
+
+#### T6 — 前端：新建招标页 `tenders/new/page.tsx`
+- [x] 表单字段：标题、客户名称、地点、描述、预算范围、截止日期、来源 URL、分类
+- [x] 表单验证（React Hook Form + Zod）
+- [x] 提交后跳转到详情页
+
+#### T7 — 前端：招标详情页 `tenders/[id]/page.tsx`
+- [x] 基本信息展示（含编辑入口）
+- [x] 决策操作区（「决定投标」/「放弃」按钮，仅 PENDING 状态显示）
+- [x] 文件上传区
+- [x] AI 评分占位区（阶段 5 接入）
+- [ ] 关联投标列表（链接到 bid 详情，阶段 4 实现）
+
+#### T8 — 前端：导航菜单更新
+- [x] 侧边栏已有「商机仪表板」入口指向 `/tenders`（已存在）
 
 ### 完成标准
 
 - 可完整创建、编辑、查看招标项目
+- 可执行投标/放弃决策，状态正确流转
 - 文件上传成功并可下载
-- 招标列表支持状态筛选
+- 招标列表支持状态筛选与关键字搜索
 
 ---
 
