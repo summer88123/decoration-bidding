@@ -19,6 +19,6 @@ export const config = {
   SMTP_USER: process.env.SMTP_USER || '',
   SMTP_PASS: process.env.SMTP_PASS || '',
   SMTP_FROM: process.env.SMTP_FROM || 'noreply@decoration-bidding.com',
-  LOGIN_MAX_FAILURES: 5,
+  LOGIN_MAX_FAILURES: process.env.NODE_ENV === 'production' ? 5 : 9999,
   LOGIN_LOCK_TTL: 30 * 60,
 } as const
