@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { Settings, LogOut } from 'lucide-react'
@@ -50,6 +51,7 @@ export function Sidebar() {
   const router = useRouter()
   const user = useAuthStore((s) => s.user)
   const clearAuth = useAuthStore((s) => s.clearAuth)
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
 
   const handleLogout = () => {
     clearAuth()
@@ -60,6 +62,7 @@ export function Sidebar() {
     pathname === href || pathname.startsWith(href + '/')
 
   return (
+    <>
     <aside
       className="flex flex-col h-screen w-[240px] bg-surface border-r border-border sticky top-0"
       aria-label="主导航"
@@ -135,7 +138,7 @@ export function Sidebar() {
               </div>
             </div>
             <button
-              onClick={handleLogout}
+              onClick={() => setShowLogoutConfirm(true)}
               title="退出登录"
               className="ml-auto p-1 text-muted hover:text-fg hover:bg-inset rounded-[4px] transition-colors shrink-0"
             >
@@ -145,5 +148,34 @@ export function Sidebar() {
         </div>
       )}
     </aside>
+
+    {/* Logout confirm modal */}
+    {showLogoutConfirm && (
+      <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+        <div className="bg-bg border border-border rounded-[6px] w-[360px] max-w-[90vw]">
+          <div className="px-4 py-3 border-b border-border font-semibold text-sm text-fg">
+            确认退出登录
+          </div>
+          <div className="px-4 py-4 text-sm text-muted">
+            退出后需要重新输入账号密码才能登录，确认继续？
+          </div>
+          <div className="px-4 py-3 border-t border-border flex justify-end gap-2">
+            <button
+              onClick={() => setShowLogoutConfirm(false)}
+              className="px-3 py-[3px] text-xs border border-border rounded-[6px] bg-surface hover:bg-inset text-fg transition-colors"
+            >
+              取消
+            </button>
+            <button
+              onClick={handleLogout}
+              className="px-4 py-[3px] text-xs bg-[#cf222e] hover:bg-[#a40e26] text-white rounded-[6px] font-medium transition-colors"
+            >
+              退出登录
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   )
 }
