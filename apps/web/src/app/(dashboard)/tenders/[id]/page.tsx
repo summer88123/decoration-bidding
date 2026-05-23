@@ -2,26 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import {
-  ArrowLeft,
-  Edit2,
-  Trash2,
-  Check,
-  X,
-  Upload,
-  ExternalLink,
-  Calendar,
-  MapPin,
-  Building2,
-  TrendingUp,
-  Loader2,
-} from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Badge } from '@/components/ui/badge'
-import { cn } from '@/lib/utils'
+import { Edit2, Trash2, Upload, ExternalLink, Plus, Loader2 } from 'lucide-react'
+import Link from 'next/link'
 import {
   getTender,
   updateTender,
@@ -33,24 +15,73 @@ import {
 
 // ─── 状态配置 ─────────────────────────────────────────────────────────────────
 
-const STATUS_BADGE: Record<string, { label: string; className: string }> = {
-  PENDING: { label: '待决策', className: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
-  DECIDED: { label: '已决策', className: 'bg-blue-100 text-blue-800 border-blue-200' },
-  BIDDING: { label: '投标中', className: 'bg-indigo-100 text-indigo-800 border-indigo-200' },
-  SUBMITTED: { label: '已提交', className: 'bg-purple-100 text-purple-800 border-purple-200' },
-  WON: { label: '已中标', className: 'bg-green-100 text-green-800 border-green-200' },
-  LOST: { label: '已落标', className: 'bg-red-100 text-red-800 border-red-200' },
-  DECLINED: { label: '已放弃', className: 'bg-gray-100 text-gray-600 border-gray-200' },
+const STATUS_MAP: Record<string, { label: string; bg: string; color: string }> = {
+  PENDING:   { label: '待决策',   bg: '#fff8c5', color: '#9a6700' },
+  DECIDED:   { label: '决定投标', bg: '#ddf4ff', color: '#0969da' },
+  BIDDING:   { label: '投标中',   bg: '#ddf4ff', color: '#0969da' },
+  SUBMITTED: { label: '已提交',   bg: '#dafbe1', color: '#1a7f37' },
+  WON:       { label: '已中标',   bg: '#1a7f37', color: '#fff' },
+  LOST:      { label: '已落标',   bg: '#ffebe9', color: '#cf222e' },
+  DECLINED:  { label: '已放弃',   bg: '#f6f8fa', color: '#656d76' },
 }
 
-function formatBudget(budget?: number) {
-  if (!budget) return '—'
-  if (budget >= 1_000_000) return `HK$ ${(budget / 1_000_000).toFixed(2)}M`
-  if (budget >= 1_000) return `HK$ ${(budget / 1_000).toFixed(0)}K`
-  return `HK$ ${budget}`
+// ─── Countdown ────────────────────────────────────────────────────────────────
+
+function Countdown({ deadline }: { deadline?: string }) {
+  const [text, setText] = useState('')
+
+  useEffect(() => {
+    if (!deadline) { setText('—'); return }
+    const tick = () => {
+      const diff = new Date(deadline).getTime() - Date.now()
+      if (diff <= 0) { setText('已截标'); return }
+      const d = Math.floor(diff / 86400000)
+      const h = Math.floor((diff % 86400000) / 3600000).toString().padStart(2, '0')
+      const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0')
+      const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0')
+      setText(`${d}天 ${h}:${m}:${s}`)
+    }
+    tick()
+    const id = setInterval(tick, 1000)
+    return () => clearInterval(id)
+  }, [deadline])
+
+  const isExpired = deadline ? new Date(deadline).getTime() <= Date.now() : false
+
+  return (
+    <div className="border border-border rounded-[6px] mb-4">
+      <div className="card-header px-4 py-3 border-b border-border bg-surface rounded-t-[6px]">
+        <h3 className="text-sm font-semibold text-fg">截标倒计时</h3>
+      </div>
+      <div className="px-4 py-4 text-center">
+        <div
+          className="text-[28px] font-bold tabular-nums font-mono"
+          style={{ color: isExpired ? '#656d76' : '#cf222e' }}
+        >
+          {text}
+        </div>
+        {deadline && (
+          <div className="text-xs text-muted mt-1">
+            {deadline.slice(0, 10)} 截止
+          </div>
+        )}
+      </div>
+    </div>
+  )
 }
 
-// ─── Edit Form ────────────────────────────────────────────────────────────────
+// ─── InfoGrid ─────────────────────────────────────────────────────────────────
+
+function InfoItem({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="text-xs text-muted block mb-1">{label}</label>
+      <div className="text-sm font-medium text-fg">{children}</div>
+    </div>
+  )
+}
+
+// ─── EditForm ─────────────────────────────────────────────────────────────────
 
 function EditForm({
   tender,
@@ -74,58 +105,157 @@ function EditForm({
   const handleSave = async () => {
     setSaving(true)
     await onSave({
-      title: form.title,
-      clientName: form.clientName || undefined,
-      location: form.location || undefined,
+      ...form,
       budgetEstimate: form.budgetEstimate ? Number(form.budgetEstimate) : undefined,
       deadline: form.deadline ? new Date(form.deadline).toISOString() : undefined,
-      sourceUrl: form.sourceUrl || undefined,
-    })
+    } as Partial<Tender>)
     setSaving(false)
   }
 
+  const field = (
+    id: keyof typeof form,
+    label: string,
+    type = 'text',
+    placeholder = '',
+  ) => (
+    <div className="flex flex-col gap-1">
+      <label className="text-[13px] font-medium text-fg">{label}</label>
+      <input
+        type={type}
+        value={form[id]}
+        placeholder={placeholder}
+        onChange={(e) => setForm((f) => ({ ...f, [id]: e.target.value }))}
+        className="w-full px-3 py-[5px] border border-border rounded-[6px] text-sm bg-bg text-fg focus:outline-none focus:border-[#0969da] focus:ring-[3px] focus:ring-[rgba(9,105,218,0.2)]"
+      />
+    </div>
+  )
+
   return (
-    <div className="space-y-4">
-      <div className="space-y-1.5">
-        <Label>项目标题</Label>
-        <Input value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} />
+    <div className="flex flex-col gap-4">
+      {field('title', '项目名称')}
+      <div className="grid grid-cols-2 gap-4">
+        {field('clientName', '业主 / 甲方')}
+        {field('location', '项目地点')}
       </div>
       <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <Label>客户名称</Label>
-          <Input value={form.clientName} onChange={(e) => setForm((f) => ({ ...f, clientName: e.target.value }))} />
-        </div>
-        <div className="space-y-1.5">
-          <Label>地点</Label>
-          <Input value={form.location} onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))} />
-        </div>
+        {field('budgetEstimate', '预算估算（HK$）', 'number')}
+        {field('deadline', '截标日期', 'date')}
       </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <Label>预算（HK$）</Label>
-          <Input type="number" value={form.budgetEstimate} onChange={(e) => setForm((f) => ({ ...f, budgetEstimate: e.target.value }))} />
-        </div>
-        <div className="space-y-1.5">
-          <Label>截止日期</Label>
-          <Input type="date" value={form.deadline} onChange={(e) => setForm((f) => ({ ...f, deadline: e.target.value }))} />
-        </div>
-      </div>
-      <div className="space-y-1.5">
-        <Label>来源链接</Label>
-        <Input type="url" value={form.sourceUrl} onChange={(e) => setForm((f) => ({ ...f, sourceUrl: e.target.value }))} />
-      </div>
+      {field('sourceUrl', '招标来源网址', 'url', 'https://...')}
       <div className="flex gap-2 justify-end">
-        <Button variant="outline" size="sm" onClick={onCancel}>取消</Button>
-        <Button size="sm" onClick={handleSave} disabled={saving}>
-          {saving && <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />}
+        <button
+          type="button"
+          onClick={onCancel}
+          className="px-3 py-[3px] text-xs border border-border rounded-[6px] bg-surface hover:bg-inset text-fg transition-colors"
+        >
+          取消
+        </button>
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={saving}
+          className="inline-flex items-center gap-1 px-3 py-[3px] text-xs bg-[#1f883d] hover:bg-[#1a7f37] text-white rounded-[6px] transition-colors disabled:opacity-60"
+        >
+          {saving && <Loader2 className="w-3 h-3 animate-spin" />}
           保存
-        </Button>
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ─── StatusFlow ───────────────────────────────────────────────────────────────
+
+const STATUS_STEPS = [
+  { status: 'PENDING', label: '待决策' },
+  { status: 'BIDDING', label: '投标中' },
+  { status: 'SUBMITTED', label: '已提交' },
+  { status: 'result', label: '结果待定' },
+]
+
+function StatusFlow({
+  status,
+  onDecide,
+  onDecline,
+  deciding,
+}: {
+  status: string
+  onDecide: () => void
+  onDecline: () => void
+  deciding: boolean
+}) {
+  const currentIdx = STATUS_STEPS.findIndex((s) => s.status === status)
+  const canDecide = status === 'PENDING'
+  const canDecline = ['PENDING', 'BIDDING'].includes(status)
+
+  return (
+    <div className="border border-border rounded-[6px]">
+      <div className="px-4 py-3 border-b border-border bg-surface rounded-t-[6px]">
+        <h3 className="text-sm font-semibold text-fg">状态流转</h3>
+      </div>
+      <div className="px-4 py-4">
+        <div className="flex flex-col gap-2 mb-4">
+          {STATUS_STEPS.map((step, i) => {
+            const isActive = i === currentIdx
+            const isDone = i < currentIdx
+            return (
+              <div key={step.status}>
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-2 h-2 rounded-full shrink-0"
+                    style={{
+                      background: isActive ? '#0969da' : isDone ? '#1a7f37' : 'transparent',
+                      border: isActive || isDone ? 'none' : '2px solid #d0d7de',
+                    }}
+                  />
+                  <span
+                    className="text-[13px]"
+                    style={{
+                      fontWeight: isActive ? 500 : 400,
+                      color: isActive ? '#1f2328' : '#656d76',
+                    }}
+                  >
+                    {step.label}
+                  </span>
+                  {isActive && (
+                    <span className="text-[11px] text-muted">当前</span>
+                  )}
+                </div>
+                {i < STATUS_STEPS.length - 1 && (
+                  <div className="ml-[3px] w-0.5 h-4 bg-border" />
+                )}
+              </div>
+            )
+          })}
+        </div>
+
+        {canDecide && (
+          <button
+            onClick={onDecide}
+            disabled={deciding}
+            className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-[5px] bg-[#1f883d] hover:bg-[#1a7f37] text-white text-sm rounded-[6px] border border-[rgba(31,35,40,0.15)] font-medium transition-colors disabled:opacity-60 mb-2"
+          >
+            {deciding ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+            决定投标
+          </button>
+        )}
+        {canDecline && (
+          <button
+            onClick={onDecline}
+            disabled={deciding}
+            className="w-full inline-flex items-center justify-center px-4 py-[5px] text-sm border border-border rounded-[6px] bg-bg text-[#cf222e] hover:bg-[#cf222e] hover:text-white font-medium transition-colors disabled:opacity-60"
+          >
+            放弃此项目
+          </button>
+        )}
       </div>
     </div>
   )
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
+
+type TabId = 'docs' | 'bids' | 'history'
 
 export default function TenderDetailPage() {
   const router = useRouter()
@@ -135,9 +265,9 @@ export default function TenderDetailPage() {
   const [tender, setTender] = useState<Tender | null>(null)
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
-  const [deciding, setDeciding] = useState<'BID' | 'DECLINE' | null>(null)
+  const [deciding, setDeciding] = useState(false)
   const [uploading, setUploading] = useState(false)
-  const [error, setError] = useState('')
+  const [activeTab, setActiveTab] = useState<TabId>('docs')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -145,7 +275,7 @@ export default function TenderDetailPage() {
       const res = await getTender(id)
       setTender(res.data)
     } catch {
-      setError('加载失败')
+      setTender(null)
     } finally {
       setLoading(false)
     }
@@ -160,18 +290,29 @@ export default function TenderDetailPage() {
   }
 
   const handleDelete = async () => {
-    if (!confirm('确认删除此招标项目？')) return
+    if (!confirm('确认删除此招标项目？此操作不可撤销。')) return
     await deleteTender(id)
     router.push('/tenders')
   }
 
-  const handleDecide = async (decision: 'BID' | 'DECLINE') => {
-    setDeciding(decision)
+  const handleDecide = async () => {
+    setDeciding(true)
     try {
-      await decideTender(id, decision)
+      await decideTender(id, 'BID')
       await load()
     } finally {
-      setDeciding(null)
+      setDeciding(false)
+    }
+  }
+
+  const handleDecline = async () => {
+    if (!confirm('确认放弃此项目？此操作不可撤销。')) return
+    setDeciding(true)
+    try {
+      await decideTender(id, 'DECLINE')
+      await load()
+    } finally {
+      setDeciding(false)
     }
   }
 
@@ -190,231 +331,236 @@ export default function TenderDetailPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto py-6 max-w-4xl">
-        <div className="h-8 w-64 bg-inset rounded animate-pulse mb-6" />
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => <div key={i} className="h-32 bg-inset rounded-lg animate-pulse" />)}
-        </div>
+      <div className="p-6 max-w-[1100px]">
+        <div className="h-4 w-48 bg-inset rounded animate-pulse mb-4" />
+        <div className="h-6 w-96 bg-inset rounded animate-pulse mb-6" />
+        <div className="h-48 bg-inset rounded-[6px] animate-pulse" />
       </div>
     )
   }
 
   if (!tender) {
     return (
-      <div className="container mx-auto py-6 max-w-4xl text-center text-muted">
-        {error || '招标项目不存在'}
-      </div>
+      <div className="p-6 text-center text-muted">招标项目不存在或已被删除</div>
     )
   }
 
-  const statusInfo = STATUS_BADGE[tender.status] ?? { label: tender.status, className: '' }
+  const statusInfo = STATUS_MAP[tender.status] ?? STATUS_MAP.PENDING
   const canEdit = ['PENDING', 'DECIDED'].includes(tender.status)
   const canDelete = tender.status === 'PENDING'
-  const canDecide = tender.status === 'PENDING'
 
   return (
-    <div className="container mx-auto py-6 max-w-4xl">
-      {/* Header */}
-      <div className="flex items-start gap-4 mb-6">
-        <Button variant="ghost" size="sm" className="-ml-1 mt-0.5 text-muted" onClick={() => router.push('/tenders')}>
-          <ArrowLeft className="w-4 h-4" />
-        </Button>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <Badge variant="outline" className={cn('text-xs', statusInfo.className)}>
-              {statusInfo.label}
-            </Badge>
-          </div>
-          <h1 className="text-xl font-bold text-fg leading-snug">{tender.title}</h1>
-        </div>
-        <div className="flex gap-2 shrink-0">
-          {canEdit && !editing && (
-            <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
-              <Edit2 className="w-3.5 h-3.5 mr-1" />
-              编辑
-            </Button>
-          )}
+    <div className="flex flex-col min-h-screen">
+      {/* Topbar */}
+      <header className="border-b border-border px-6 py-3 flex items-center justify-between bg-bg sticky top-0 z-10">
+        <nav className="flex items-center gap-1.5 text-[13px] text-muted">
+          <Link href="/dashboard" className="text-muted hover:text-[#0969da]">商机仪表板</Link>
+          <span>/</span>
+          <span className="text-fg truncate max-w-xs">{tender.title}</span>
+        </nav>
+        <div className="flex gap-2">
           {canDelete && (
-            <Button variant="outline" size="sm" className="text-red-500 hover:text-red-600" onClick={handleDelete}>
-              <Trash2 className="w-3.5 h-3.5" />
-            </Button>
+            <button
+              onClick={handleDelete}
+              className="inline-flex items-center gap-1 px-3 py-[3px] text-xs border border-border rounded-[6px] bg-bg text-[#cf222e] hover:bg-[#cf222e] hover:text-white transition-colors"
+            >
+              放弃投标
+            </button>
           )}
+          <Link
+            href={`/bids/new?tenderId=${tender.id}`}
+            className="inline-flex items-center gap-1.5 px-4 py-[5px] bg-[#1f883d] hover:bg-[#1a7f37] text-white text-sm rounded-[6px] border border-[rgba(31,35,40,0.15)] font-medium transition-colors"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            创建投标
+          </Link>
         </div>
-      </div>
+      </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* 主内容 */}
-        <div className="lg:col-span-2 space-y-4">
-          {/* 基本信息 */}
-          <div className="bg-surface border border-border rounded-lg p-5">
-            <h2 className="text-sm font-semibold text-fg mb-4">基本信息</h2>
-            {editing ? (
-              <EditForm tender={tender} onSave={handleSave} onCancel={() => setEditing(false)} />
-            ) : (
-              <div className="space-y-3 text-sm">
-                <div className="flex gap-2">
-                  <Building2 className="w-4 h-4 text-muted mt-0.5 shrink-0" />
-                  <div>
-                    <div className="text-muted text-xs mb-0.5">客户名称</div>
-                    <div className="text-fg">{tender.clientName || '—'}</div>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <MapPin className="w-4 h-4 text-muted mt-0.5 shrink-0" />
-                  <div>
-                    <div className="text-muted text-xs mb-0.5">地点</div>
-                    <div className="text-fg">{tender.location || '—'}</div>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <TrendingUp className="w-4 h-4 text-muted mt-0.5 shrink-0" />
-                  <div>
-                    <div className="text-muted text-xs mb-0.5">预算估算</div>
-                    <div className="text-fg">{formatBudget(tender.budgetEstimate)}</div>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Calendar className="w-4 h-4 text-muted mt-0.5 shrink-0" />
-                  <div>
-                    <div className="text-muted text-xs mb-0.5">截止日期</div>
-                    <div className="text-fg">
-                      {tender.deadline
-                        ? new Date(tender.deadline).toLocaleDateString('zh-HK', {
-                            year: 'numeric', month: 'long', day: 'numeric',
-                          })
-                        : '—'}
-                    </div>
-                  </div>
-                </div>
-                {tender.sourceUrl && (
-                  <div className="flex gap-2">
-                    <ExternalLink className="w-4 h-4 text-muted mt-0.5 shrink-0" />
-                    <div>
-                      <div className="text-muted text-xs mb-0.5">来源链接</div>
-                      <a
-                        href={tender.sourceUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-accent hover:underline truncate block max-w-xs"
-                      >
-                        {tender.sourceUrl}
-                      </a>
-                    </div>
+      <main className="p-6 max-w-[1100px]">
+        {/* Page header */}
+        <div className="flex items-start justify-between gap-4 mb-6 flex-wrap">
+          <div>
+            <div className="flex items-center gap-2 mb-1.5">
+              <span
+                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                style={{ background: statusInfo.bg, color: statusInfo.color }}
+              >
+                {statusInfo.label}
+              </span>
+              <span className="text-xs text-muted">
+                创建于 {tender.createdAt?.slice(0, 10)}
+              </span>
+            </div>
+            <h1 className="text-xl font-semibold text-fg leading-snug">{tender.title}</h1>
+            {(tender.clientName || tender.location) && (
+              <div className="text-[13px] text-muted mt-1">
+                {[tender.clientName, tender.location].filter(Boolean).join(' · ')}
+              </div>
+            )}
+          </div>
+          <div className="flex gap-2 shrink-0">
+            {canEdit && !editing && (
+              <button
+                onClick={() => setEditing(true)}
+                className="inline-flex items-center gap-1 px-3 py-[3px] text-xs border border-border rounded-[6px] bg-surface hover:bg-inset text-fg transition-colors"
+              >
+                <Edit2 className="w-3 h-3" />
+                编辑信息
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Two-column layout */}
+        <div className="grid grid-cols-[1fr_280px] gap-6 items-start">
+          {/* Left main */}
+          <div className="flex flex-col gap-4">
+            {/* Info card / Edit form */}
+            <div className="border border-border rounded-[6px]">
+              <div className="px-4 py-3 border-b border-border bg-surface rounded-t-[6px] flex items-center justify-between">
+                <h2 className="text-sm font-semibold text-fg">基本信息</h2>
+              </div>
+              <div className="px-4 py-4">
+                {editing ? (
+                  <EditForm tender={tender} onSave={handleSave} onCancel={() => setEditing(false)} />
+                ) : (
+                  <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+                    <InfoItem label="业主 / 甲方">{tender.clientName || '—'}</InfoItem>
+                    <InfoItem label="项目地点">{tender.location || '—'}</InfoItem>
+                    <InfoItem label="预算估算">
+                      {tender.budgetEstimate ? `HK$ ${Number(tender.budgetEstimate).toLocaleString()}` : '—'}
+                    </InfoItem>
+                    <InfoItem label="截标日期">{tender.deadline?.slice(0, 10) || '—'}</InfoItem>
+                    <InfoItem label="来源网址">
+                      {tender.sourceUrl ? (
+                        <a href={tender.sourceUrl} target="_blank" rel="noreferrer"
+                          className="text-[#0969da] hover:underline inline-flex items-center gap-1">
+                          查看原文 <ExternalLink className="w-3 h-3" />
+                        </a>
+                      ) : '—'}
+                    </InfoItem>
+                    <InfoItem label="AI 评分">
+                      <span className="text-muted text-xs">（评估中...）</span>
+                    </InfoItem>
                   </div>
                 )}
               </div>
-            )}
-          </div>
-
-          {/* 文件上传区 */}
-          <div className="bg-surface border border-border rounded-lg p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold text-fg">招标文件</h2>
-              <label className="cursor-pointer">
-                <input type="file" className="hidden" accept=".pdf,.docx,.xlsx,.dwg" onChange={handleUpload} />
-                <Button variant="outline" size="sm" asChild disabled={uploading}>
-                  <span>
-                    {uploading ? (
-                      <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
-                    ) : (
-                      <Upload className="w-3.5 h-3.5 mr-1" />
-                    )}
-                    上传文件
-                  </span>
-                </Button>
-              </label>
             </div>
-            {tender.rawDocumentUrl ? (
-              <a
-                href={tender.rawDocumentUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 text-sm text-accent hover:underline"
-              >
-                <ExternalLink className="w-4 h-4" />
-                查看原始文件
-              </a>
-            ) : (
-              <p className="text-sm text-muted">暂无文件，点击「上传文件」添加招标文件</p>
-            )}
-          </div>
-        </div>
 
-        {/* 侧边栏 */}
-        <div className="space-y-4">
-          {/* AI 匹配评分（占位） */}
-          {tender.matchScore !== undefined && tender.matchScore !== null ? (
-            <div className="bg-surface border border-border rounded-lg p-4">
-              <h2 className="text-sm font-semibold text-fg mb-3">AI 匹配评分</h2>
-              <div className="text-3xl font-bold text-accent">
-                {tender.matchScore.toFixed(0)}
-                <span className="text-sm font-normal text-muted ml-1">/ 100</span>
-              </div>
-            </div>
-          ) : (
-            <div className="bg-inset border border-border rounded-lg p-4">
-              <h2 className="text-sm font-semibold text-muted mb-1">AI 匹配评分</h2>
-              <p className="text-xs text-muted">上传招标文件后，AI 将自动分析匹配度（阶段 5）</p>
-            </div>
-          )}
-
-          {/* 决策操作 */}
-          {canDecide && (
-            <div className="bg-surface border border-border rounded-lg p-4">
-              <h2 className="text-sm font-semibold text-fg mb-3">投标决策</h2>
-              <p className="text-xs text-muted mb-3">请选择是否参与此招标</p>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => handleDecide('BID')}
-                  disabled={deciding !== null}
-                >
-                  {deciding === 'BID' ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  ) : (
-                    <Check className="w-3.5 h-3.5 mr-1" />
-                  )}
-                  决定投标
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="flex-1 text-red-500 hover:text-red-600"
-                  onClick={() => handleDecide('DECLINE')}
-                  disabled={deciding !== null}
-                >
-                  {deciding === 'DECLINE' ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  ) : (
-                    <X className="w-3.5 h-3.5 mr-1" />
-                  )}
-                  放弃
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* 风险标签 */}
-          {tender.riskLabels.length > 0 && (
-            <div className="bg-surface border border-border rounded-lg p-4">
-              <h2 className="text-sm font-semibold text-fg mb-3">风险标签</h2>
-              <div className="flex flex-wrap gap-1.5">
-                {tender.riskLabels.map((label) => (
-                  <span key={label} className="text-xs bg-red-50 text-red-600 border border-red-100 px-2 py-0.5 rounded-full">
-                    {label}
-                  </span>
+            {/* Tabs */}
+            <div className="border border-border rounded-[6px]">
+              {/* Tab nav */}
+              <div className="flex border-b border-border bg-surface rounded-t-[6px] overflow-x-auto">
+                {([
+                  { id: 'docs',    label: '文件' },
+                  { id: 'bids',    label: '投标方案' },
+                  { id: 'history', label: '操作记录' },
+                ] as { id: TabId; label: string }[]).map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className="px-4 py-2.5 text-sm border-b-2 transition-colors whitespace-nowrap"
+                    style={{
+                      borderBottomColor: activeTab === tab.id ? '#0969da' : 'transparent',
+                      color: activeTab === tab.id ? '#0969da' : '#656d76',
+                      fontWeight: activeTab === tab.id ? 600 : 400,
+                    }}
+                  >
+                    {tab.label}
+                  </button>
                 ))}
               </div>
-            </div>
-          )}
 
-          {/* 创建时间 */}
-          <div className="text-xs text-muted px-1">
-            创建于 {new Date(tender.createdAt).toLocaleDateString('zh-HK')}
+              {/* Tab content */}
+              <div className="p-4">
+                {activeTab === 'docs' && (
+                  <div>
+                    {tender.rawDocumentUrl ? (
+                      <div className="flex items-center justify-between p-3 border border-border rounded-[6px] mb-3">
+                        <span className="text-sm text-fg truncate max-w-xs">
+                          {tender.rawDocumentUrl.split('/').pop()}
+                        </span>
+                        <a
+                          href={tender.rawDocumentUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-xs text-[#0969da] hover:underline inline-flex items-center gap-1"
+                        >
+                          下载 <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted mb-3">尚未上传任何文件。</p>
+                    )}
+                    <label className="inline-flex items-center gap-1.5 px-3 py-[5px] border border-border rounded-[6px] text-sm bg-surface hover:bg-inset text-fg cursor-pointer transition-colors">
+                      {uploading ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Upload className="w-3.5 h-3.5" />
+                      )}
+                      上传文件
+                      <input type="file" className="hidden" onChange={handleUpload} disabled={uploading} />
+                    </label>
+                  </div>
+                )}
+
+                {activeTab === 'bids' && (
+                  <div className="text-center py-8">
+                    <p className="text-sm text-muted mb-3">暂无投标方案</p>
+                    <Link
+                      href={`/bids/new?tenderId=${tender.id}`}
+                      className="inline-flex items-center gap-1.5 px-4 py-[5px] bg-[#1f883d] hover:bg-[#1a7f37] text-white text-sm rounded-[6px] font-medium transition-colors"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      创建投标方案
+                    </Link>
+                  </div>
+                )}
+
+                {activeTab === 'history' && (
+                  <ul className="flex flex-col gap-0">
+                    <li className="flex gap-3">
+                      <div className="flex flex-col items-center">
+                        <div className="w-2 h-2 rounded-full bg-[#0969da] mt-1 shrink-0" />
+                        <div className="w-0.5 flex-1 bg-border mt-1" />
+                      </div>
+                      <div className="pb-4">
+                        <div className="text-sm font-medium text-fg">创建招标项目</div>
+                        <div className="text-xs text-muted mt-0.5">
+                          {tender.createdAt?.slice(0, 16).replace('T', ' ')}
+                        </div>
+                      </div>
+                    </li>
+                    {tender.rawDocumentUrl && (
+                      <li className="flex gap-3">
+                        <div className="flex flex-col items-center">
+                          <div className="w-2 h-2 rounded-full bg-[#1a7f37] mt-1 shrink-0" />
+                        </div>
+                        <div className="pb-4">
+                          <div className="text-sm font-medium text-fg">上传招标文件</div>
+                          <div className="text-xs text-muted mt-0.5">系统记录</div>
+                        </div>
+                      </li>
+                    )}
+                  </ul>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Right sidebar */}
+          <div>
+            <Countdown deadline={tender.deadline ?? undefined} />
+            <StatusFlow
+              status={tender.status}
+              onDecide={handleDecide}
+              onDecline={handleDecline}
+              deciding={deciding}
+            />
           </div>
         </div>
-      </div>
+      </main>
     </div>
   )
 }
