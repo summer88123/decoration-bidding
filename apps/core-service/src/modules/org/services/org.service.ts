@@ -80,11 +80,10 @@ export async function inviteMember(
     throw err
   }
 
-  try {
-    await sendInviteEmail(data.email, data.name, tempPassword)
-  } catch (err) {
+  // 异步发送邀请邮件，不阻塞主流程（未配置 SMTP 时自动跳过）
+  sendInviteEmail(data.email, data.name, tempPassword).catch((err: unknown) => {
     console.error('[OrgService] sendInviteEmail failed:', err)
-  }
+  })
 
   return user
 }
