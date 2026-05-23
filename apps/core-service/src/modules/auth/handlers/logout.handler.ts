@@ -8,7 +8,7 @@ export async function logoutHandler(request: FastifyRequest, reply: FastifyReply
   if (refreshToken) {
     await authSvc.logout(refreshToken)
   }
-  reply.clearCookie('refresh_token', { path: '/api/auth/refresh' })
+  reply.clearCookie('refresh_token', { path: '/' })
   reply.clearCookie('logged_in', { path: '/' })
   return reply.send({ success: true })
 }
