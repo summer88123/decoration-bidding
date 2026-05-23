@@ -34,8 +34,21 @@ apiClient.interceptors.response.use(
     const original = error.config as AxiosRequestConfig & { _retry?: boolean }
     if (error.response?.status !== 401 || original._retry) return Promise.reject(error)
     if (original.url?.includes('/api/auth/refresh')) {
+      // refresh 端点 401：清除认证状态并跳转登录页
       useAuthStore.getState().clearAuth()
-      if (typeof window !== 'undefined') window.location.href = '/login'
+      if (typeof window !== 'undefined') {
+        // 清除 logged_in 标记 cookie，防止 proxy.ts 将 /login 重定向回 /dashboard 造成循环
+        document.cookie = 'logged_in=; path=/; max-age=0'
+        // 仅在非登录页时跳转，避免在登录页因 refresh 失败造成无限重载
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login'
+        }
+      }
+      return Promise.reject(error)
+    }
+    // 其他 auth 端点（login/logout 等）401 直接拒绝，不触发 token 刷新重试
+    // 否则登录密码错误等 401 会被错误地触发 refresh，导致 "RefreshToken 已被吊销" 误报
+    if (original.url?.includes('/api/auth/')) {
       return Promise.reject(error)
     }
     if (isRefreshing) {
@@ -59,7 +72,14 @@ apiClient.interceptors.response.use(
     } catch (refreshError) {
       processQueue(refreshError, null)
       useAuthStore.getState().clearAuth()
-      if (typeof window !== 'undefined') window.location.href = '/login'
+      if (typeof window !== 'undefined') {
+        // 清除 logged_in 标记 cookie，防止 proxy.ts 将 /login 重定向回 /dashboard 造成循环
+        document.cookie = 'logged_in=; path=/; max-age=0'
+        // 仅在非登录页时跳转，避免在登录页因 refresh 失败造成无限重载
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login'
+        }
+      }
       return Promise.reject(refreshError)
     } finally {
       isRefreshing = false
