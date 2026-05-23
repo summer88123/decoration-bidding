@@ -43,6 +43,11 @@ export function MembersTab() {
   const { data, mutate } = useSWR('/api/org/members?pageSize=50', fetcher)
   const members: Member[] = data?.data ?? []
 
+  // 计算当前活跃的公司管理员数量，用于判断是否为最后一名管理员
+  const activeAdminCount = members.filter(
+    (m) => m.role === 'COMPANY_ADMIN' && m.status === 'active'
+  ).length
+
   const {
     register,
     handleSubmit,
@@ -137,7 +142,10 @@ export function MembersTab() {
                 <Badge variant={m.status === 'active' ? 'default' : 'outline'}>
                   {m.status === 'active' ? '活跃' : m.status === 'pending' ? '待激活' : m.status}
                 </Badge>
-                <Button variant="ghost" size="sm" onClick={() => handleRemove(m.id, m.name)}>
+                <Button variant="ghost" size="sm" onClick={() => handleRemove(m.id, m.name)}
+                  disabled={m.role === 'COMPANY_ADMIN' && m.status === 'active' && activeAdminCount <= 1}
+                  title={m.role === 'COMPANY_ADMIN' && m.status === 'active' && activeAdminCount <= 1 ? '公司至少需要保留一名活跃管理员' : undefined}
+                >
                   移除
                 </Button>
               </div>

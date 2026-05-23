@@ -12,6 +12,14 @@ set -uo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 LOGS="$ROOT/logs"
 
+# 加载根目录 .env（忽略注释行和空行，export 到子进程）
+if [[ -f "$ROOT/.env" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  source <(grep -v '^\s*#' "$ROOT/.env" | grep -v '^\s*$')
+  set +a
+fi
+
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; NC='\033[0m'
 info()  { echo -e "${GREEN}[dev]${NC} $*"; }
 warn()  { echo -e "${YELLOW}[dev]${NC} $*"; }
