@@ -8,6 +8,8 @@ import { z } from 'zod'
 import { Loader2, X, Plus } from 'lucide-react'
 import { apiClient } from '@/lib/api-client'
 import { toast } from 'sonner'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 const materialSchema = z.object({
   name: z.string().min(1, '名称不能为空'),
@@ -33,7 +35,7 @@ type Pagination = { page: number; pageSize: number; total: number; totalPages: n
 const fetcher = (url: string) => apiClient.get(url).then(r => r.data)
 
 function inputCls() {
-  return 'w-full px-3 py-[5px] border border-border rounded-[6px] text-sm bg-bg text-fg focus:outline-none focus:border-[#0969da] focus:ring-[3px] focus:ring-[rgba(9,105,218,0.2)]'
+  return 'w-full'
 }
 
 // Category → badge color
@@ -121,27 +123,29 @@ export function MaterialsTab() {
           <div className="px-4 py-3 bg-surface border-b border-border rounded-t-[6px] flex items-center justify-between gap-3 flex-wrap">
             <span className="text-sm font-semibold text-fg">物料清单</span>
             <div className="flex items-center gap-2 flex-wrap">
-              <input
+              <Input
                 type="text"
                 placeholder="搜索名称/规格..."
                 value={search}
                 onChange={e => { setSearch(e.target.value); setPage(1) }}
-                className="text-xs px-3 py-[3px] border border-border rounded-[6px] bg-bg focus:outline-none focus:border-[#0969da] w-44"
+                className="text-xs w-44"
               />
-              <button
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => fileInputRef.current?.click()}
-                className="text-xs px-3 py-[3px] border border-border rounded-[6px] bg-surface hover:bg-inset text-fg transition-colors"
               >
                 Excel 导入
-              </button>
+              </Button>
               <input ref={fileInputRef} type="file" accept=".xlsx,.xls" className="hidden" onChange={handleImport} />
-              <button
+              <Button
+                variant="primary"
+                size="sm"
                 onClick={() => setShowAdd(true)}
-                className="inline-flex items-center gap-1 text-xs px-3 py-[3px] bg-[#1f883d] hover:bg-[#1a7f37] text-white rounded-[6px] font-medium transition-colors"
               >
                 <Plus className="w-3 h-3" />
                 添加物料
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -165,7 +169,7 @@ export function MaterialsTab() {
                     <td className="px-4 py-2.5">
                       <button
                         onClick={() => handleDelete(m.id, m.name)}
-                        className="text-xs px-2 py-[3px] border border-border rounded-[4px] text-[#cf222e] hover:bg-[#ffebe9] hover:border-[#cf222e] transition-colors"
+                        className="text-xs px-2 py-[3px] border border-border rounded-[4px] text-danger hover:bg-danger-subtle hover:border-danger transition-colors"
                       >
                         删除
                       </button>
@@ -183,17 +187,9 @@ export function MaterialsTab() {
 
           {pagination && pagination.totalPages > 1 && (
             <div className="flex justify-end gap-2 px-4 py-3 border-t border-border">
-              <button
-                disabled={page <= 1}
-                onClick={() => setPage(p => p - 1)}
-                className="text-xs px-3 py-[3px] border border-border rounded-[6px] bg-surface hover:bg-inset disabled:opacity-40 transition-colors"
-              >上一页</button>
+              <Button variant="secondary" size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>上一页</Button>
               <span className="text-xs self-center text-muted">{page} / {pagination.totalPages}</span>
-              <button
-                disabled={page >= pagination.totalPages}
-                onClick={() => setPage(p => p + 1)}
-                className="text-xs px-3 py-[3px] border border-border rounded-[6px] bg-surface hover:bg-inset disabled:opacity-40 transition-colors"
-              >下一页</button>
+              <Button variant="secondary" size="sm" disabled={page >= pagination.totalPages} onClick={() => setPage(p => p + 1)}>下一页</Button>
             </div>
           )}
         </div>
@@ -213,45 +209,43 @@ export function MaterialsTab() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-medium text-fg block mb-1">物料名称 *</label>
-                  <input {...register('name')} className={inputCls()} />
-                  {errors.name && <p className="text-xs text-[#cf222e] mt-1">{errors.name.message}</p>}
+                  <Input {...register('name')} className="w-full" />
+                  {errors.name && <p className="text-xs text-danger mt-1">{errors.name.message}</p>}
                 </div>
                 <div>
                   <label className="text-xs font-medium text-fg block mb-1">规格</label>
-                  <input {...register('spec')} className={inputCls()} placeholder="如 600×600mm" />
+                  <Input {...register('spec')} className="w-full" placeholder="如 600×600mm" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-medium text-fg block mb-1">单位</label>
-                  <input {...register('unit')} className={inputCls()} placeholder="m²" />
+                  <Input {...register('unit')} className="w-full" placeholder="m²" />
                 </div>
                 <div>
                   <label className="text-xs font-medium text-fg block mb-1">参考单价（HKD） *</label>
-                  <input type="number" step="0.01" {...register('unitCost')} className={inputCls()} />
-                  {errors.unitCost && <p className="text-xs text-[#cf222e] mt-1">{errors.unitCost.message}</p>}
+                  <Input type="number" step="0.01" {...register('unitCost')} className="w-full" />
+                  {errors.unitCost && <p className="text-xs text-danger mt-1">{errors.unitCost.message}</p>}
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-medium text-fg block mb-1">类别</label>
-                  <input {...register('category')} className={inputCls()} placeholder="如 地面材料" />
+                  <Input {...register('category')} className="w-full" placeholder="如 地面材料" />
                 </div>
                 <div>
                   <label className="text-xs font-medium text-fg block mb-1">供应商</label>
-                  <input {...register('supplier')} className={inputCls()} />
+                  <Input {...register('supplier')} className="w-full" />
                 </div>
               </div>
               <div className="flex gap-2 justify-end pt-1 border-t border-border mt-1">
-                <button type="button" onClick={() => setShowAdd(false)}
-                  className="px-3 py-[3px] text-xs border border-border rounded-[6px] bg-surface hover:bg-inset text-fg">
+                <Button type="button" variant="secondary" size="sm" onClick={() => setShowAdd(false)}>
                   取消
-                </button>
-                <button type="submit" disabled={isSubmitting}
-                  className="inline-flex items-center gap-1 px-4 py-[3px] text-xs bg-[#1f883d] hover:bg-[#1a7f37] text-white rounded-[6px] font-medium transition-colors disabled:opacity-60">
+                </Button>
+                <Button type="submit" variant="primary" size="sm" disabled={isSubmitting}>
                   {isSubmitting && <Loader2 className="w-3 h-3 animate-spin" />}
                   保存
-                </button>
+                </Button>
               </div>
             </form>
           </div>

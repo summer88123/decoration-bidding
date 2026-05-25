@@ -8,6 +8,9 @@ import { X, Loader2 } from 'lucide-react'
 import useSWR from 'swr'
 import { apiClient } from '@/lib/api-client'
 import { toast } from 'sonner'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 
 const schema = z.object({
   name: z.string().min(1, '公司名称不能为空'),
@@ -20,10 +23,6 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>
 
 const fetcher = (url: string) => apiClient.get(url).then(r => r.data.data)
-
-function inputCls() {
-  return 'w-full px-3 py-[5px] border border-border rounded-[6px] text-sm bg-bg text-fg focus:outline-none focus:border-[#0969da] focus:ring-[3px] focus:ring-[rgba(9,105,218,0.2)]'
-}
 
 export function CompanyTab() {
   const { data, mutate } = useSWR('/api/org/company', fetcher)
@@ -84,35 +83,35 @@ export function CompanyTab() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-medium text-fg block mb-1">公司名称 *</label>
-                <input {...register('name')} className={inputCls()} />
-                {errors.name && <p className="text-xs text-[#cf222e] mt-1">{errors.name.message}</p>}
+                <Input {...register('name')} className="w-full" />
+                {errors.name && <p className="text-xs text-danger mt-1">{errors.name.message}</p>}
               </div>
               <div>
                 <label className="text-xs font-medium text-fg block mb-1">营业执照号</label>
-                <input {...register('licenseNo')} className={`${inputCls()} font-mono`} />
+                <Input {...register('licenseNo')} className="w-full font-mono" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-medium text-fg block mb-1">联系电话</label>
-                <input {...register('contactPhone')} className={inputCls()} />
+                <Input {...register('contactPhone')} className="w-full" />
               </div>
               <div>
                 <label className="text-xs font-medium text-fg block mb-1">电子邮箱</label>
-                <input type="email" {...register('contactEmail')} className={inputCls()} />
-                {errors.contactEmail && <p className="text-xs text-[#cf222e] mt-1">{errors.contactEmail.message}</p>}
+                <Input type="email" {...register('contactEmail')} className="w-full" />
+                {errors.contactEmail && <p className="text-xs text-danger mt-1">{errors.contactEmail.message}</p>}
               </div>
             </div>
             <div>
               <label className="text-xs font-medium text-fg block mb-1">公司地址</label>
-              <input {...register('address')} className={inputCls()} />
+              <Input {...register('address')} className="w-full" />
             </div>
             <div>
               <label className="text-xs font-medium text-fg block mb-1">公司简介</label>
-              <textarea
+              <Textarea
                 {...register('description')}
                 rows={3}
-                className={`${inputCls()} resize-y`}
+                className="w-full"
               />
             </div>
           </div>
@@ -154,21 +153,18 @@ export function CompanyTab() {
 
       {/* Actions */}
       <div className="flex gap-2">
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="inline-flex items-center gap-1.5 px-4 py-[5px] bg-[#1f883d] hover:bg-[#1a7f37] text-white text-sm rounded-[6px] border border-[rgba(31,35,40,0.15)] font-medium transition-colors disabled:opacity-60"
-        >
+        <Button type="submit" variant="primary" size="md" disabled={isSubmitting}>
           {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
           保存公司信息
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="secondary"
+          size="md"
           onClick={() => { reset(); if (data) setQualifications(data.qualifications ?? []) }}
-          className="px-4 py-[5px] border border-border rounded-[6px] text-sm bg-surface hover:bg-inset text-fg transition-colors"
         >
           取消
-        </button>
+        </Button>
       </div>
     </form>
   )
