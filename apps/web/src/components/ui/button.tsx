@@ -1,35 +1,33 @@
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
-
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-oklch(0.708 0 0) disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 dark:focus-visible:ring-oklch(0.556 0 0)",
+  "inline-flex items-center justify-center gap-1.5 whitespace-nowrap font-medium transition-colors disabled:pointer-events-none disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40",
   {
     variants: {
       variant: {
-        default:
-          "bg-oklch(0.205 0 0) text-oklch(0.985 0 0) shadow hover:bg-oklch(0.205 0 0)/90 dark:bg-oklch(0.922 0 0) dark:text-oklch(0.205 0 0) dark:hover:bg-oklch(0.922 0 0)/90",
-        destructive:
-          "bg-oklch(0.577 0.245 27.325) text-destructive-foreground shadow-sm hover:bg-oklch(0.577 0.245 27.325)/90 dark:bg-oklch(0.704 0.191 22.216) dark:hover:bg-oklch(0.704 0.191 22.216)/90",
-        outline:
-          "border border-oklch(0.922 0 0) bg-oklch(1 0 0) shadow-sm hover:bg-oklch(0.97 0 0) hover:text-oklch(0.205 0 0) dark:border-oklch(1 0 0 / 15%) dark:bg-oklch(0.145 0 0) dark:hover:bg-oklch(0.269 0 0) dark:hover:text-oklch(0.985 0 0)",
+        primary:
+          "bg-success hover:bg-[#1a7f37] text-white border border-[rgba(31,35,40,0.15)] rounded-[6px]",
         secondary:
-          "bg-oklch(0.97 0 0) text-oklch(0.205 0 0) shadow-sm hover:bg-oklch(0.97 0 0)/80 dark:bg-oklch(0.269 0 0) dark:text-oklch(0.985 0 0) dark:hover:bg-oklch(0.269 0 0)/80",
-        ghost: "hover:bg-oklch(0.97 0 0) hover:text-oklch(0.205 0 0) dark:hover:bg-oklch(0.269 0 0) dark:hover:text-oklch(0.985 0 0)",
-        link: "text-oklch(0.205 0 0) underline-offset-4 hover:underline dark:text-oklch(0.922 0 0)",
+          "bg-surface hover:bg-inset text-fg border border-border rounded-[6px]",
+        danger:
+          "bg-bg border border-border text-danger hover:bg-danger hover:text-white rounded-[6px]",
+        ghost:
+          "hover:bg-inset text-fg rounded-[6px]",
+        link:
+          "text-accent hover:underline p-0 h-auto",
       },
       size: {
-        default: "h-9 px-4 py-2",
-        sm: "h-8 rounded-md px-3 text-xs",
-        lg: "h-10 rounded-md px-8",
-        icon: "h-9 w-9",
+        sm: "px-3 py-[3px] text-xs",
+        md: "px-4 py-[5px] text-sm",
+        icon: "p-1.5 w-7 h-7",
       },
     },
     defaultVariants: {
-      variant: "default",
-      size: "default",
+      variant: "secondary",
+      size: "md",
     },
   }
 )
