@@ -4,17 +4,21 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Plus } from 'lucide-react'
 import { listTenders, type Tender, type TenderStatus } from '@/lib/tenders-api'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
 
 // ─── 状态配置（匹配原型精确颜色）────────────────────────────────────────────
 
-const STATUS_MAP: Record<string, { label: string; bg: string; color: string }> = {
-  PENDING:   { label: '待决策',   bg: '#fff8c5', color: '#9a6700' },
-  DECIDED:   { label: '决定投标', bg: '#ddf4ff', color: '#0969da' },
-  BIDDING:   { label: '投标中',   bg: '#ddf4ff', color: '#0969da' },
-  SUBMITTED: { label: '已提交',   bg: '#dafbe1', color: '#1a7f37' },
-  WON:       { label: '已中标',   bg: '#1a7f37', color: '#fff' },
-  LOST:      { label: '已落标',   bg: '#ffebe9', color: '#cf222e' },
-  DECLINED:  { label: '已放弃',   bg: '#f6f8fa', color: '#656d76' },
+type StatusVariant = 'default' | 'success' | 'info' | 'warning' | 'danger' | 'done'
+const STATUS_MAP: Record<string, { label: string; variant: StatusVariant; className?: string }> = {
+  PENDING:   { label: '待决策',   variant: 'warning' },
+  DECIDED:   { label: '决定投标', variant: 'info' },
+  BIDDING:   { label: '投标中',   variant: 'info' },
+  SUBMITTED: { label: '已提交',   variant: 'success' },
+  WON:       { label: '已中标',   variant: 'success', className: 'bg-success text-white' },
+  LOST:      { label: '已落标',   variant: 'danger' },
+  DECLINED:  { label: '已放弃',   variant: 'default' },
 }
 
 const FILTER_TABS: { value: TenderStatus | 'ALL'; label: string }[] = [
@@ -87,24 +91,21 @@ export default function TendersPage() {
           <div className="text-xl font-semibold text-fg">招标项目</div>
           <div className="text-xs text-muted mt-0.5">管理所有招标机会</div>
         </div>
-        <button
-          onClick={() => router.push('/tenders/new')}
-          className="inline-flex items-center gap-1.5 px-4 py-[5px] bg-[#1f883d] hover:bg-[#1a7f37] text-white text-sm rounded-[6px] border border-[rgba(31,35,40,0.15)] transition-colors"
-        >
+        <Button variant="primary" size="md" onClick={() => router.push('/tenders/new')}>
           <Plus className="w-3.5 h-3.5" />
           新建招标项目
-        </button>
+        </Button>
       </header>
 
       <main className="p-6 flex-1">
         {/* Filter bar */}
         <div className="flex items-center gap-2 mb-4 flex-wrap">
-          <input
+          <Input
             type="search"
             placeholder="搜索项目名称、业主…"
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-            className="flex-1 min-w-[200px] max-w-xs px-3 py-[5px] border border-border rounded-[6px] text-sm bg-bg text-fg focus:outline-none focus:border-[#0969da] focus:ring-[3px] focus:ring-[rgba(9,105,218,0.3)]"
+            className="flex-1 min-w-[200px] max-w-xs"
           />
           <div className="flex gap-0.5">
             {FILTER_TABS.map((tab) => (
@@ -158,13 +159,10 @@ export default function TendersPage() {
                 <tr>
                   <td colSpan={6} className="px-4 py-12 text-center text-muted text-sm">
                     <div className="mb-3">暂无招标项目</div>
-                    <button
-                      onClick={() => router.push('/tenders/new')}
-                      className="inline-flex items-center gap-1.5 px-4 py-[5px] bg-[#1f883d] hover:bg-[#1a7f37] text-white text-sm rounded-[6px] transition-colors"
-                    >
+                    <Button variant="primary" size="md" onClick={() => router.push('/tenders/new')}>
                       <Plus className="w-3.5 h-3.5" />
                       创建第一个招标项目
-                    </button>
+                    </Button>
                   </td>
                 </tr>
               ) : (
@@ -180,7 +178,7 @@ export default function TendersPage() {
                       <td className="px-4 py-2.5">
                         <a
                           href={`/tenders/${t.id}`}
-                          className="font-medium text-[#0969da] hover:underline"
+                          className="font-medium text-accent hover:underline"
                           onClick={(e) => e.stopPropagation()}
                         >
                           {t.title}
@@ -188,7 +186,7 @@ export default function TendersPage() {
                       </td>
                       <td className="px-4 py-2.5 text-muted">{t.clientName ?? '—'}</td>
                       <td
-                        className={`px-4 py-2.5 tabular-nums ${urgent ? 'text-[#cf222e] font-medium' : ''}`}
+                        className={`px-4 py-2.5 tabular-nums ${urgent ? 'text-danger font-medium' : ''}`}
                       >
                         {formatDate(t.deadline)}
                       </td>
@@ -196,12 +194,9 @@ export default function TendersPage() {
                         {formatBudget(t.budgetEstimate)}
                       </td>
                       <td className="px-4 py-2.5">
-                        <span
-                          className="px-2 py-0.5 rounded-full text-xs font-medium"
-                          style={{ background: s.bg, color: s.color }}
-                        >
+                        <Badge variant={s.variant} className={s.className}>
                           {s.label}
-                        </span>
+                        </Badge>
                       </td>
                       <td className="px-4 py-2.5">
                         <a
