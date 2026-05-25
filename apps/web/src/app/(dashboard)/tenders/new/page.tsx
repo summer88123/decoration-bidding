@@ -71,7 +71,7 @@ export default function NewTenderPage() {
       {/* Page header with breadcrumb */}
       <div className="px-6 py-3 border-b border-border bg-bg flex items-center gap-2">
         <nav className="flex items-center gap-1.5 text-[13px] text-muted">
-          <Link href="/dashboard" className="text-[#0969da] hover:underline">商机仪表板</Link>
+          <Link href="/dashboard" className="text-accent hover:underline">商机仪表板</Link>
           <span>/</span>
           <span>新建招标项目</span>
         </nav>
@@ -85,7 +85,7 @@ export default function NewTenderPage() {
               <h1 className="text-xl font-semibold text-fg mb-1">新建招标项目</h1>
               <p className="text-[13px] text-muted">录入招标信息，创建后状态默认为"待决策"</p>
             </div>
-            <span className="inline-flex items-center gap-1.5 bg-[#fff8c5] text-[#9a6700] border border-[#d4a72c] rounded-full px-2.5 py-0.5 text-xs font-medium">
+            <span className="inline-flex items-center gap-1.5 bg-warning-subtle text-warning border border-warning/60 rounded-full px-2.5 py-0.5 text-xs font-medium">
               ● 待决策
             </span>
           </div>
@@ -193,7 +193,7 @@ export default function NewTenderPage() {
               <div className="p-4">
                 {file ? (
                   <div className="flex items-center gap-3 border border-border rounded-[6px] px-3 py-2">
-                    <Paperclip className="w-4 h-4 text-[#cf222e] shrink-0" />
+                    <Paperclip className="w-4 h-4 text-danger shrink-0" />
                     <span className="text-sm flex-1 truncate">{file.name}</span>
                     <span className="text-xs text-muted">{(file.size / 1024 / 1024).toFixed(1)} MB</span>
                     <button
@@ -206,7 +206,7 @@ export default function NewTenderPage() {
                   </div>
                 ) : (
                   <div
-                    className="border border-dashed border-border rounded-[6px] px-6 py-6 text-center text-muted cursor-pointer bg-surface hover:border-[#0969da] hover:bg-[#f0f6ff] transition-colors"
+                    className="border border-dashed border-border rounded-[6px] px-6 py-6 text-center text-muted cursor-pointer bg-surface hover:border-accent hover:bg-accent/5 transition-colors"
                     onClick={() => fileInputRef.current?.click()}
                     onDrop={handleDrop}
                     onDragOver={(e) => e.preventDefault()}
@@ -230,7 +230,7 @@ export default function NewTenderPage() {
             </div>
 
             {error && (
-              <div className="text-sm text-danger bg-danger-subtle border border-[#ffc1c0] rounded-[6px] px-3 py-2 mb-4">
+              <div className="text-sm text-danger bg-danger-subtle border border-danger/40 rounded-[6px] px-3 py-2 mb-4">
                 {error}
               </div>
             )}
