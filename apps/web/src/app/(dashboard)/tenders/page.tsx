@@ -114,7 +114,7 @@ export default function TendersPage() {
                 onClick={() => { setActiveTab(tab.value); setPage(1) }}
                 className={`px-3 py-[5px] rounded-[6px] text-xs border transition-colors ${
                   activeTab === tab.value
-                    ? 'bg-[#0969da] text-white border-[#0969da]'
+                    ? 'bg-accent text-white border-accent'
                     : 'bg-bg text-muted border-border hover:bg-surface'
                 }`}
               >
@@ -125,7 +125,7 @@ export default function TendersPage() {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-            className="px-3 py-[5px] text-xs border border-border rounded-[6px] bg-surface text-fg cursor-pointer"
+            className="px-3 py-[5px] text-xs border border-border rounded-[6px] bg-surface text-fg cursor-pointer focus:outline-none focus:border-accent focus:ring-[3px] focus:ring-accent/20"
           >
             <option value="deadline-asc">截标日期 ↑</option>
             <option value="deadline-desc">截标日期 ↓</option>
@@ -235,7 +235,7 @@ export default function TendersPage() {
                       onClick={() => setPage(p)}
                       className={`px-3 py-[3px] text-xs border rounded-[6px] transition-colors ${
                         p === page
-                          ? 'bg-[#0969da] text-white border-[#0969da]'
+                          ? 'bg-accent text-white border-accent'
                           : 'bg-surface border-border hover:bg-inset'
                       }`}
                     >
