@@ -15,14 +15,14 @@ import {
 
 // ─── 状态配置 ─────────────────────────────────────────────────────────────────
 
-const STATUS_MAP: Record<string, { label: string; bg: string; color: string }> = {
-  PENDING:   { label: '待决策',   bg: '#fff8c5', color: '#9a6700' },
-  DECIDED:   { label: '决定投标', bg: '#ddf4ff', color: '#0969da' },
-  BIDDING:   { label: '投标中',   bg: '#ddf4ff', color: '#0969da' },
-  SUBMITTED: { label: '已提交',   bg: '#dafbe1', color: '#1a7f37' },
-  WON:       { label: '已中标',   bg: '#1a7f37', color: '#fff' },
-  LOST:      { label: '已落标',   bg: '#ffebe9', color: '#cf222e' },
-  DECLINED:  { label: '已放弃',   bg: '#f6f8fa', color: '#656d76' },
+const STATUS_MAP: Record<string, { label: string; className: string }> = {
+  PENDING:   { label: '待决策',   className: 'bg-warning-subtle text-warning' },
+  DECIDED:   { label: '决定投标', className: 'bg-info-subtle text-accent' },
+  BIDDING:   { label: '投标中',   className: 'bg-info-subtle text-accent' },
+  SUBMITTED: { label: '已提交',   className: 'bg-success-subtle text-success' },
+  WON:       { label: '已中标',   className: 'bg-success text-white' },
+  LOST:      { label: '已落标',   className: 'bg-danger-subtle text-danger' },
+  DECLINED:  { label: '已放弃',   className: 'bg-surface text-muted' },
 }
 
 // ─── Countdown ────────────────────────────────────────────────────────────────
@@ -55,8 +55,7 @@ function Countdown({ deadline }: { deadline?: string }) {
       </div>
       <div className="px-4 py-4 text-center">
         <div
-          className="text-[28px] font-bold tabular-nums font-mono"
-          style={{ color: isExpired ? '#656d76' : '#cf222e' }}
+          className={`text-[28px] font-bold tabular-nums font-mono ${isExpired ? 'text-muted' : 'text-danger'}`}
         >
           {text}
         </div>
@@ -125,7 +124,7 @@ function EditForm({
         value={form[id]}
         placeholder={placeholder}
         onChange={(e) => setForm((f) => ({ ...f, [id]: e.target.value }))}
-        className="w-full px-3 py-[5px] border border-border rounded-[6px] text-sm bg-bg text-fg focus:outline-none focus:border-[#0969da] focus:ring-[3px] focus:ring-[rgba(9,105,218,0.2)]"
+        className="w-full px-3 py-[5px] border border-border rounded-[6px] text-sm bg-bg text-fg focus:outline-none focus:border-accent focus:ring-[3px] focus:ring-accent/20"
       />
     </div>
   )
@@ -154,7 +153,7 @@ function EditForm({
           type="button"
           onClick={handleSave}
           disabled={saving}
-          className="inline-flex items-center gap-1 px-3 py-[3px] text-xs bg-[#1f883d] hover:bg-[#1a7f37] text-white rounded-[6px] transition-colors disabled:opacity-60"
+          className="inline-flex items-center gap-1 px-3 py-[3px] text-xs bg-success hover:bg-success-hover text-white rounded-[6px] transition-colors disabled:opacity-60"
         >
           {saving && <Loader2 className="w-3 h-3 animate-spin" />}
           保存
@@ -202,18 +201,12 @@ function StatusFlow({
               <div key={step.status}>
                 <div className="flex items-center gap-2">
                   <div
-                    className="w-2 h-2 rounded-full shrink-0"
-                    style={{
-                      background: isActive ? '#0969da' : isDone ? '#1a7f37' : 'transparent',
-                      border: isActive || isDone ? 'none' : '2px solid #d0d7de',
-                    }}
+                    className={`w-2 h-2 rounded-full shrink-0 ${
+                      isActive ? 'bg-accent border-0' : isDone ? 'bg-success border-0' : 'bg-transparent border-2 border-border'
+                    }`}
                   />
                   <span
-                    className="text-[13px]"
-                    style={{
-                      fontWeight: isActive ? 500 : 400,
-                      color: isActive ? '#1f2328' : '#656d76',
-                    }}
+                    className={`text-[13px] ${isActive ? 'font-medium text-fg' : 'text-muted'}`}
                   >
                     {step.label}
                   </span>
@@ -233,7 +226,7 @@ function StatusFlow({
           <button
             onClick={onDecide}
             disabled={deciding}
-            className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-[5px] bg-[#1f883d] hover:bg-[#1a7f37] text-white text-sm rounded-[6px] border border-[rgba(31,35,40,0.15)] font-medium transition-colors disabled:opacity-60 mb-2"
+            className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-[5px] bg-success hover:bg-success-hover text-white text-sm rounded-[6px] border border-[rgba(31,35,40,0.15)] font-medium transition-colors disabled:opacity-60 mb-2"
           >
             {deciding ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
             决定投标
@@ -243,7 +236,7 @@ function StatusFlow({
           <button
             onClick={onDecline}
             disabled={deciding}
-            className="w-full inline-flex items-center justify-center px-4 py-[5px] text-sm border border-border rounded-[6px] bg-bg text-[#cf222e] hover:bg-[#cf222e] hover:text-white font-medium transition-colors disabled:opacity-60"
+            className="w-full inline-flex items-center justify-center px-4 py-[5px] text-sm border border-border rounded-[6px] bg-bg text-danger hover:bg-danger hover:text-white font-medium transition-colors disabled:opacity-60"
           >
             放弃此项目
           </button>
@@ -354,7 +347,7 @@ export default function TenderDetailPage() {
       {/* Topbar */}
       <header className="border-b border-border px-6 py-3 flex items-center justify-between bg-bg sticky top-0 z-10">
         <nav className="flex items-center gap-1.5 text-[13px] text-muted">
-          <Link href="/dashboard" className="text-muted hover:text-[#0969da]">商机仪表板</Link>
+          <Link href="/dashboard" className="text-muted hover:text-accent">商机仪表板</Link>
           <span>/</span>
           <span className="text-fg truncate max-w-xs">{tender.title}</span>
         </nav>
@@ -362,14 +355,14 @@ export default function TenderDetailPage() {
           {canDelete && (
             <button
               onClick={handleDelete}
-              className="inline-flex items-center gap-1 px-3 py-[3px] text-xs border border-border rounded-[6px] bg-bg text-[#cf222e] hover:bg-[#cf222e] hover:text-white transition-colors"
+              className="inline-flex items-center gap-1 px-3 py-[3px] text-xs border border-border rounded-[6px] bg-bg text-danger hover:bg-danger hover:text-white transition-colors"
             >
               放弃投标
             </button>
           )}
           <Link
             href={`/bids/new?tenderId=${tender.id}`}
-            className="inline-flex items-center gap-1.5 px-4 py-[5px] bg-[#1f883d] hover:bg-[#1a7f37] text-white text-sm rounded-[6px] border border-[rgba(31,35,40,0.15)] font-medium transition-colors"
+            className="inline-flex items-center gap-1.5 px-4 py-[5px] bg-success hover:bg-success-hover text-white text-sm rounded-[6px] border border-[rgba(31,35,40,0.15)] font-medium transition-colors"
           >
             <Plus className="w-3.5 h-3.5" />
             创建投标
@@ -383,8 +376,7 @@ export default function TenderDetailPage() {
           <div>
             <div className="flex items-center gap-2 mb-1.5">
               <span
-                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                style={{ background: statusInfo.bg, color: statusInfo.color }}
+                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusInfo.className}`}
               >
                 {statusInfo.label}
               </span>
@@ -435,7 +427,7 @@ export default function TenderDetailPage() {
                     <InfoItem label="来源网址">
                       {tender.sourceUrl ? (
                         <a href={tender.sourceUrl} target="_blank" rel="noreferrer"
-                          className="text-[#0969da] hover:underline inline-flex items-center gap-1">
+                          className="text-accent hover:underline inline-flex items-center gap-1">
                           查看原文 <ExternalLink className="w-3 h-3" />
                         </a>
                       ) : '—'}
@@ -460,12 +452,11 @@ export default function TenderDetailPage() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className="px-4 py-2.5 text-sm border-b-2 transition-colors whitespace-nowrap"
-                    style={{
-                      borderBottomColor: activeTab === tab.id ? '#0969da' : 'transparent',
-                      color: activeTab === tab.id ? '#0969da' : '#656d76',
-                      fontWeight: activeTab === tab.id ? 600 : 400,
-                    }}
+                    className={`px-4 py-2.5 text-sm border-b-2 transition-colors whitespace-nowrap ${
+                      activeTab === tab.id
+                        ? 'border-accent text-accent font-semibold'
+                        : 'border-transparent text-muted font-normal'
+                    }`}
                   >
                     {tab.label}
                   </button>
@@ -485,7 +476,7 @@ export default function TenderDetailPage() {
                           href={tender.rawDocumentUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-xs text-[#0969da] hover:underline inline-flex items-center gap-1"
+                           className="text-xs text-accent hover:underline inline-flex items-center gap-1"
                         >
                           下载 <ExternalLink className="w-3 h-3" />
                         </a>
@@ -510,7 +501,7 @@ export default function TenderDetailPage() {
                     <p className="text-sm text-muted mb-3">暂无投标方案</p>
                     <Link
                       href={`/bids/new?tenderId=${tender.id}`}
-                      className="inline-flex items-center gap-1.5 px-4 py-[5px] bg-[#1f883d] hover:bg-[#1a7f37] text-white text-sm rounded-[6px] font-medium transition-colors"
+                        className="inline-flex items-center gap-1.5 px-4 py-[5px] bg-success hover:bg-success-hover text-white text-sm rounded-[6px] font-medium transition-colors"
                     >
                       <Plus className="w-3.5 h-3.5" />
                       创建投标方案
@@ -522,7 +513,7 @@ export default function TenderDetailPage() {
                   <ul className="flex flex-col gap-0">
                     <li className="flex gap-3">
                       <div className="flex flex-col items-center">
-                        <div className="w-2 h-2 rounded-full bg-[#0969da] mt-1 shrink-0" />
+                        <div className="w-2 h-2 rounded-full bg-accent mt-1 shrink-0" />
                         <div className="w-0.5 flex-1 bg-border mt-1" />
                       </div>
                       <div className="pb-4">
@@ -535,7 +526,7 @@ export default function TenderDetailPage() {
                     {tender.rawDocumentUrl && (
                       <li className="flex gap-3">
                         <div className="flex flex-col items-center">
-                          <div className="w-2 h-2 rounded-full bg-[#1a7f37] mt-1 shrink-0" />
+                           <div className="w-2 h-2 rounded-full bg-success mt-1 shrink-0" />
                         </div>
                         <div className="pb-4">
                           <div className="text-sm font-medium text-fg">上传招标文件</div>
