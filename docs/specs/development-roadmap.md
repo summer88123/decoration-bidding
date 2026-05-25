@@ -1,7 +1,26 @@
 # 开发路线图
 
 > 香港建筑及室内设计投标辅助系统 — 分阶段实施计划
-> 最后更新：2026-05-23
+> 最后更新：2026-05-25
+
+## 文档参考索引
+
+| 文档 | 路径 | 说明 |
+|------|------|------|
+| 用户故事 — 数据模型 | `docs/story/00-data-model.md` | 整体数据关系图，跨模块字段约定 |
+| 用户故事 — 认证 | `docs/story/01-auth.md` | 注册/登录/Token 刷新用户故事 |
+| 用户故事 — 组织管理 | `docs/story/02-organization.md` | 公司/成员/物料库用户故事 |
+| 用户故事 — 招标管理 | `docs/story/03-tender.md` | 招标 CRUD、状态流转、文件上传用户故事 |
+| 用户故事 — 投标流程 | `docs/story/04-bid.md` | 三标（商务/技术/经济）完整用户故事 |
+| 原型 — 仪表板 | `docs/prototype/screens/dashboard.html` | 商机仪表板 UI 原型 |
+| 原型 — 新建招标 | `docs/prototype/screens/tender-new.html` | 新建招标表单 UI 原型 |
+| 原型 — 招标详情 | `docs/prototype/screens/tender-detail.html` | 招标详情页 UI 原型 |
+| 原型 — 投标工作台 | `docs/prototype/screens/bid-workspace.html` | 三标 Tab 工作台 UI 原型 |
+| 原型 — 经济标 | `docs/prototype/screens/bid-economic.html` | 经济标左右分屏清单 UI 原型 |
+| 原型 — 组织设置 | `docs/prototype/screens/settings.html` | 公司/成员/物料库设置 UI 原型 |
+| 原型 vs 实现差异 | `docs/prototype/diff.md` | 原型要求但当前尚未实现的数据模型/接口差异 |
+
+---
 
 ---
 
@@ -43,6 +62,8 @@
 > 预计时长：3-4 天
 > 依赖：阶段 0 完成
 > **实际完成日期：2026-05-22**
+
+**参考文档：** `docs/story/01-auth.md` · `docs/prototype/screens/auth-login.html` · `docs/prototype/screens/auth-register.html`
 
 ### 后端（`core-service/src/modules/auth`）
 
@@ -103,6 +124,8 @@
 > **实际完成日期：2026-05-23**
 > 依赖：阶段 1 完成（需要认证中间件）
 
+**参考文档：** `docs/story/02-organization.md` · `docs/prototype/screens/settings.html`
+
 ### 后端（`core-service/src/modules/org`）
 
 - [x] `org.repository.ts`
@@ -152,6 +175,10 @@
 > 预计时长：3-4 天
 > 依赖：阶段 2 完成
 > **实际完成日期：2026-05-23**
+
+**参考文档：** `docs/story/03-tender.md` · `docs/prototype/screens/tender-new.html` · `docs/prototype/screens/tender-detail.html` · `docs/prototype/screens/dashboard.html`
+
+**已知数据层差异（与原型不符）：** 见 `docs/prototype/diff.md` — 一、Tender 模型差异 / 三、TenderDocument 模型差异 / 四、操作记录 / 五、Dashboard 统计接口
 
 ### 功能点拆分
 
@@ -227,6 +254,10 @@
 > 预计时长：5-7 天
 > 依赖：阶段 3 完成
 > **当前状态：骨架存在，未完成**（`bid/handlers/document.handler.ts` 可用；前端 `bids/[id]/page.tsx` 骨架存在，三标 Tab 尚未实现）
+
+**参考文档：** `docs/story/04-bid.md` · `docs/prototype/screens/bid-workspace.html` · `docs/prototype/screens/bid-economic.html`
+
+**已知数据层差异（与原型不符）：** 见 `docs/prototype/diff.md` — 二、Bid 模型差异
 
 ### 后端（`core-service/src/modules/bid`）
 
