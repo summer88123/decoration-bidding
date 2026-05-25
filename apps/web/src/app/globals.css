@@ -30,8 +30,11 @@
     --danger-subtle: #ffebe9;
     --warning: #9a6700;
     --warning-subtle: #fff8c5;
+    --success-hover: #1a7f37;
     --done: #8250df;
     --done-subtle: #fbefff;
+    --info: #0969da;
+    --info-subtle: #ddf4ff;
 
     /* 字体 */
     --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans",

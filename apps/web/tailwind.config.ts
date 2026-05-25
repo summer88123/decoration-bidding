@@ -22,6 +22,7 @@ const config: Config = {
         // 语义色
         success: {
           DEFAULT: 'var(--success)',
+          hover: 'var(--success-hover)',
           subtle: 'var(--success-subtle)',
         },
         danger: {
@@ -32,7 +33,14 @@ const config: Config = {
           DEFAULT: 'var(--warning)',
           subtle: 'var(--warning-subtle)',
         },
-        done: 'var(--done)',
+        done: {
+          DEFAULT: 'var(--done)',
+          subtle: 'var(--done-subtle)',
+        },
+        info: {
+          DEFAULT: 'var(--info)',
+          subtle: 'var(--info-subtle)',
+        },
       },
       fontFamily: {
         sans: [
