@@ -64,7 +64,7 @@ model User {
 // ─── 招标与投标 ────────────────────────────────────────────────
 
 model TenderProject {
-  id             String   @id @default(cuid())
+  id             String    @id @default(cuid())
   companyId      String
   sourceUrl      String?
   title          String
@@ -74,51 +74,119 @@ model TenderProject {
   budgetEstimate Float?
   matchScore     Float?
   riskLabels     String[]
-  status         String   @default("new")
+  status         String    @default("new")
   aiSummary      String?
   rawDocumentUrl String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  description    String?
+  category       String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   company       Company        @relation(fields: [companyId], references: [id])
   bids          Bid[]
   notifications Notification[]
 }
 
-model Bid {
-  id                 String   @id @default(cuid())
-  tenderId           String
-  assignedTo         String?
-  status             String   @default("draft")
-  profitMarginPercent Float?
-  totalCost          Float?
-  totalBidPrice      Float?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+enum BidStatus {
+  DRAFT
+  IN_REVIEW
+  APPROVED
+  SUBMITTED
+  WON
+  LOST
+}
 
-  tender    TenderProject @relation(fields: [tenderId], references: [id])
-  bidItems  BidItem[]
-  documents BidDocument[]
+model Bid {
+  id              String    @id @default(cuid())
+  tenderId        String
+  companyId       String
+  name            String    @default("默认方案")
+  assignedTo      String?
+  status          BidStatus @default(DRAFT)
+  profitMarginPct Decimal   @default(0) @db.Decimal(5, 2)
+  totalCost       Decimal   @default(0) @db.Decimal(14, 2)
+  totalBidPrice   Decimal   @default(0) @db.Decimal(14, 2)
+  currency        String    @default("HKD")
+  submittedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  tender        TenderProject  @relation(fields: [tenderId], references: [id])
+  commercial    BidCommercial?
+  technical     BidTechnical?
+  bidItems      BidItem[]
+  documents     BidDocument[]
+  statusHistory BidStatusLog[]
+
+  @@index([tenderId])
+  @@index([companyId])
 }
 
 model BidItem {
   id            String  @id @default(cuid())
   bidId         String
   documentId    String?
+  sortOrder     Int     @default(0)
+  itemCode      String?
   itemName      String
   description   String?
-  quantity      Float
-  unit          String
-  costPrice     Float
-  sellPrice     Float
+  quantity      Decimal @default(0) @db.Decimal(12, 3)
+  unit          String?
+  costPrice     Decimal @default(0) @db.Decimal(12, 2)
+  sellPrice     Decimal @default(0) @db.Decimal(12, 2)
   isSpecial     Boolean @default(false)
+  isManualPrice Boolean @default(false)
   remark        String?
-  drawingPage   Int?
+  drawingPage   String?
   drawingRegion String?
-  sortOrder     Int     @default(0)
+  ifcElementId  String?
 
-  bid      Bid          @relation(fields: [bidId], references: [id])
+  bid      Bid          @relation(fields: [bidId], references: [id], onDelete: Cascade)
   document BidDocument? @relation(fields: [documentId], references: [id])
+
+  @@index([bidId])
+}
+
+model BidCommercial {
+  id             String   @id @default(cuid())
+  bidId          String   @unique
+  companyName    String?
+  registrationNo String?
+  licenses       Json     @default("[]")
+  keyPersonnel   Json     @default("[]")
+  pastProjects   Json     @default("[]")
+  companyProfile String?
+  updatedAt      DateTime @updatedAt
+
+  bid Bid @relation(fields: [bidId], references: [id], onDelete: Cascade)
+}
+
+model BidTechnical {
+  id                 String   @id @default(cuid())
+  bidId              String   @unique
+  constructionMethod String?
+  siteManagement     String?
+  safetyMeasures     String?
+  qualityControl     String?
+  durationDays       Int?
+  milestonePlan      Json     @default("[]")
+  updatedAt          DateTime @updatedAt
+
+  bid Bid @relation(fields: [bidId], references: [id], onDelete: Cascade)
+}
+
+model BidStatusLog {
+  id         String   @id @default(cuid())
+  bidId      String
+  fromStatus String?
+  toStatus   String
+  operatorId String
+  comment    String?
+  createdAt  DateTime @default(now())
+
+  bid Bid @relation(fields: [bidId], references: [id], onDelete: Cascade)
+
+  @@index([bidId])
 }
 
 model BidDocument {
@@ -126,6 +194,8 @@ model BidDocument {
   bidId        String
   fileType     String   // pdf | dwg | ifc
   fileUrl      String
+  originalName String?
+  fileSize     Int?
   status       String   @default("pending") // pending|processing|completed|failed
   errorMsg     String?
   pageCount    Int?
@@ -133,9 +203,10 @@ model BidDocument {
   ifcMetadata  Json?
   createdAt    DateTime @default(now())
 
-  bid      Bid       @relation(fields: [bidId], references: [id])
+  bid      Bid       @relation(fields: [bidId], references: [id], onDelete: Cascade)
   bidItems BidItem[]
 }
+
 
 // ─── 知识与配置 ────────────────────────────────────────────────
 

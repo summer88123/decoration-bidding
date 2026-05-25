@@ -30,11 +30,54 @@ export const BidItemRepository = {
         unit: item.unit,
         costPrice: 0,
         sellPrice: 0,
-        drawingPage: item.region?.page ?? null,
+        drawingPage: item.region?.page != null ? String(item.region.page) : null,
         drawingRegion: item.region ? JSON.stringify(item.region) : null,
         sortOrder: idx,
       })),
     })
   },
+
+  // ── 手动 CRUD ───────────────────────────────────────────────
+
+  create(bidId: string, data: {
+    itemCode?: string | null
+    itemName: string
+    description?: string | null
+    quantity?: number
+    unit?: string | null
+    costPrice?: number
+    sellPrice?: number
+    isSpecial?: boolean
+    remark?: string | null
+    drawingPage?: string | null
+    drawingRegion?: string | null
+    sortOrder?: number
+  }) {
+    return prisma.bidItem.create({ data: { bidId, ...data } })
+  },
+
+  update(id: string, data: Record<string, unknown>) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return prisma.bidItem.update({ where: { id }, data: data as any })
+  },
+
+  delete(id: string) {
+    return prisma.bidItem.delete({ where: { id } })
+  },
+
+  async reorder(bidId: string, orderedIds: string[]) {
+    const updates = orderedIds.map((id, idx) =>
+      prisma.bidItem.update({ where: { id }, data: { sortOrder: idx } })
+    )
+    return prisma.$transaction(updates)
+  },
+
+  async recalcTotals(bidId: string) {
+    const items = await prisma.bidItem.findMany({ where: { bidId } })
+    const totalCost = items.reduce((sum, i) => sum + Number(i.costPrice) * Number(i.quantity), 0)
+    const totalBidPrice = items.reduce((sum, i) => sum + Number(i.sellPrice) * Number(i.quantity), 0)
+    return prisma.bid.update({ where: { id: bidId }, data: { totalCost, totalBidPrice } })
+  },
 }
+
 

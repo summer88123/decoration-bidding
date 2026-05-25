@@ -14,6 +14,8 @@ import {
   uploadTenderDocument,
   type Tender,
 } from '@/lib/tenders-api'
+import { bidApi, type BidData } from '@/lib/api/bid.api'
+import { useToast } from '@/hooks/use-toast'
 
 // ─── 状态配置 ─────────────────────────────────────────────────────────────────
 
@@ -253,6 +255,80 @@ function StatusFlow({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 type TabId = 'docs' | 'bids' | 'history'
+
+// ─── BidListSection ──────────────────────────────────────────────────────────
+
+const BID_STATUS_LABEL: Record<string, string> = {
+  DRAFT: '草稿', IN_REVIEW: '审查中', APPROVED: '已批准',
+  SUBMITTED: '已提交', WON: '已中标', LOST: '已落标',
+}
+
+function BidListSection({ tenderId }: { tenderId: string }) {
+  const router = useRouter()
+  const [bids, setBids] = useState<BidData[]>([])
+  const [creating, setCreating] = useState(false)
+  const { toast } = useToast()
+
+  useEffect(() => {
+    bidApi.getByTender(tenderId)
+      .then((res) => setBids(res.data.data))
+      .catch(() => {})
+  }, [tenderId])
+
+  async function createBid() {
+    setCreating(true)
+    try {
+      const res = await bidApi.create({ tenderId, name: 'A 方案' })
+      router.push(`/bids/${res.data.data.id}`)
+    } catch {
+      toast({ title: '创建失败', variant: 'destructive' })
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-sm text-muted">共 {bids.length} 个投标方案</span>
+        <button
+          onClick={createBid}
+          disabled={creating}
+          className="inline-flex items-center gap-1.5 px-3 py-1 bg-success hover:bg-success-hover text-white text-xs rounded font-medium transition-colors disabled:opacity-50"
+        >
+          <Plus className="w-3 h-3" />
+          {creating ? '创建中…' : '创建投标方案'}
+        </button>
+      </div>
+      {bids.length === 0 ? (
+        <div className="text-center py-8">
+          <p className="text-sm text-muted mb-2">暂无投标方案</p>
+          <p className="text-xs text-muted">点击「创建投标方案」开始编制标书</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {bids.map((bid) => (
+            <div
+              key={bid.id}
+              className="flex items-center justify-between p-3 border rounded-lg bg-white hover:border-accent cursor-pointer transition-colors"
+              onClick={() => router.push(`/bids/${bid.id}`)}
+            >
+              <span className="font-medium text-fg text-sm">{bid.name}</span>
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-muted">
+                  {bid.currency} {Number(bid.totalBidPrice).toLocaleString()}
+                </span>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
+                  {BID_STATUS_LABEL[bid.status] ?? bid.status}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 export default function TenderDetailPage() {
   const router = useRouter()
@@ -498,16 +574,7 @@ export default function TenderDetailPage() {
                 )}
 
                 {activeTab === 'bids' && (
-                  <div className="text-center py-8">
-                    <p className="text-sm text-muted mb-3">暂无投标方案</p>
-                    <Link
-                      href={`/bids/new?tenderId=${tender.id}`}
-                        className="inline-flex items-center gap-1.5 px-4 py-[5px] bg-success hover:bg-success-hover text-white text-sm rounded-[6px] font-medium transition-colors"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                      创建投标方案
-                    </Link>
-                  </div>
+                  <BidListSection tenderId={tender.id} />
                 )}
 
                 {activeTab === 'history' && (
