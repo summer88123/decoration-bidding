@@ -8,6 +8,9 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2, Paperclip, X } from 'lucide-react'
 import Link from 'next/link'
 import { createTender } from '@/lib/tenders-api'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 
 const schema = z.object({
   title: z.string().min(1, '请输入项目名称'),
@@ -96,34 +99,34 @@ export default function NewTenderPage() {
               <div className="p-4 flex flex-col gap-4">
                 {/* 项目名称（全宽） */}
                 <div className="flex flex-col gap-1">
-                  <label className="text-[13px] font-medium text-fg">
-                    项目名称 <span className="text-[#cf222e]">*</span>
-                  </label>
-                  <input
+                   <label className="text-[13px] font-medium text-fg">
+                     项目名称 <span className="text-danger">*</span>
+                   </label>
+                  <Input
                     type="text"
                     placeholder="例：尖东某商业大厦 B2 层装修工程"
-                    className="w-full px-3 py-[5px] border border-border rounded-[6px] text-sm bg-bg text-fg focus:outline-none focus:border-[#0969da] focus:ring-[3px] focus:ring-[rgba(9,105,218,0.2)]"
+                    className="w-full"
                     {...register('title')}
                   />
-                  {errors.title && <p className="text-xs text-[#cf222e]">{errors.title.message}</p>}
+                  {errors.title && <p className="text-xs text-danger">{errors.title.message}</p>}
                 </div>
 
                 {/* 业主 + 截标日期 */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1">
                     <label className="text-[13px] font-medium text-fg">业主 / 甲方名称</label>
-                    <input
+                    <Input
                       type="text"
                       placeholder="例：XX 地产集团"
-                      className="w-full px-3 py-[5px] border border-border rounded-[6px] text-sm bg-bg text-fg focus:outline-none focus:border-[#0969da] focus:ring-[3px] focus:ring-[rgba(9,105,218,0.2)]"
+                      className="w-full"
                       {...register('clientName')}
                     />
                   </div>
                   <div className="flex flex-col gap-1">
                     <label className="text-[13px] font-medium text-fg">截标日期</label>
-                    <input
+                    <Input
                       type="date"
-                      className="w-full px-3 py-[5px] border border-border rounded-[6px] text-sm bg-bg text-fg focus:outline-none focus:border-[#0969da] focus:ring-[3px] focus:ring-[rgba(9,105,218,0.2)]"
+                      className="w-full"
                       {...register('deadline')}
                     />
                   </div>
@@ -133,23 +136,23 @@ export default function NewTenderPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1">
                     <label className="text-[13px] font-medium text-fg">项目地点</label>
-                    <input
+                    <Input
                       type="text"
                       placeholder="例：香港九龙尖沙咀"
-                      className="w-full px-3 py-[5px] border border-border rounded-[6px] text-sm bg-bg text-fg focus:outline-none focus:border-[#0969da] focus:ring-[3px] focus:ring-[rgba(9,105,218,0.2)]"
+                      className="w-full"
                       {...register('location')}
                     />
                   </div>
                   <div className="flex flex-col gap-1">
                     <label className="text-[13px] font-medium text-fg">预算估算（港元）</label>
-                    <input
+                    <Input
                       type="number"
                       placeholder="3000000"
-                      className="w-full px-3 py-[5px] border border-border rounded-[6px] text-sm bg-bg text-fg font-mono focus:outline-none focus:border-[#0969da] focus:ring-[3px] focus:ring-[rgba(9,105,218,0.2)]"
+                      className="w-full font-mono"
                       {...register('budgetEstimate')}
                     />
                     {errors.budgetEstimate && (
-                      <p className="text-xs text-[#cf222e]">{errors.budgetEstimate.message}</p>
+                      <p className="text-xs text-danger">{errors.budgetEstimate.message}</p>
                     )}
                   </div>
                 </div>
@@ -157,14 +160,14 @@ export default function NewTenderPage() {
                 {/* 来源链接 */}
                 <div className="flex flex-col gap-1">
                   <label className="text-[13px] font-medium text-fg">招标来源网址</label>
-                  <input
+                  <Input
                     type="url"
                     placeholder="https://..."
-                    className="w-full px-3 py-[5px] border border-border rounded-[6px] text-sm bg-bg text-fg focus:outline-none focus:border-[#0969da] focus:ring-[3px] focus:ring-[rgba(9,105,218,0.2)]"
+                    className="w-full"
                     {...register('sourceUrl')}
                   />
                   {errors.sourceUrl && (
-                    <p className="text-xs text-[#cf222e]">{errors.sourceUrl.message}</p>
+                    <p className="text-xs text-danger">{errors.sourceUrl.message}</p>
                   )}
                   <p className="text-xs text-muted">可选，用于追溯招标来源</p>
                 </div>
@@ -172,10 +175,10 @@ export default function NewTenderPage() {
                 {/* 备注 */}
                 <div className="flex flex-col gap-1">
                   <label className="text-[13px] font-medium text-fg">备注</label>
-                  <textarea
+                  <Textarea
                     placeholder="例：需提供 BIM 模型，报价需含 5 年维保…"
                     rows={3}
-                    className="w-full px-3 py-[5px] border border-border rounded-[6px] text-sm bg-bg text-fg resize-y focus:outline-none focus:border-[#0969da] focus:ring-[3px] focus:ring-[rgba(9,105,218,0.2)]"
+                    className="w-full"
                     {...register('description')}
                   />
                 </div>
@@ -227,28 +230,30 @@ export default function NewTenderPage() {
             </div>
 
             {error && (
-              <div className="text-sm text-[#cf222e] bg-[#ffebe9] border border-[#ffc1c0] rounded-[6px] px-3 py-2 mb-4">
+              <div className="text-sm text-danger bg-danger-subtle border border-[#ffc1c0] rounded-[6px] px-3 py-2 mb-4">
                 {error}
               </div>
             )}
 
             {/* Actions */}
             <div className="flex items-center gap-2">
-              <button
+              <Button
                 type="submit"
+                variant="primary"
+                size="md"
                 disabled={submitting}
-                className="inline-flex items-center gap-1.5 px-4 py-[5px] bg-[#1f883d] hover:bg-[#1a7f37] text-white text-sm rounded-[6px] border border-[rgba(31,35,40,0.15)] font-medium transition-colors disabled:opacity-60"
               >
                 {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                 创建招标项目
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="secondary"
+                size="md"
                 onClick={() => router.push('/tenders')}
-                className="inline-flex items-center px-4 py-[5px] text-sm border border-border rounded-[6px] bg-surface hover:bg-inset text-fg font-medium transition-colors"
               >
                 取消
-              </button>
+              </Button>
             </div>
           </form>
         </div>
