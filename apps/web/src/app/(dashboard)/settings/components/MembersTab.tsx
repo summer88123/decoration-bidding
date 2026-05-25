@@ -134,7 +134,7 @@ export function MembersTab() {
                           <select
                             defaultValue={m.role}
                             onChange={e => handleRoleChange(m.id, e.target.value)}
-                            className="text-xs px-1.5 py-[3px] border border-border rounded-[4px] bg-bg focus:outline-none focus:border-[#0969da]"
+                            className="text-xs px-1.5 py-[3px] border border-border rounded-[4px] bg-bg focus:outline-none focus:border-accent"
                           >
                             <option value="MANAGER">投标经理</option>
                             <option value="BIDDER">成员</option>
@@ -162,7 +162,7 @@ export function MembersTab() {
                         ) : (
                           <button
                             onClick={() => handleRemove(m.id, m.email)}
-                            className="text-xs px-2 py-[3px] border border-border rounded-[4px] text-[#cf222e] hover:bg-[#ffebe9] hover:border-[#cf222e] transition-colors"
+                            className="text-xs px-2 py-[3px] border border-border rounded-[4px] text-danger hover:bg-danger-subtle hover:border-danger transition-colors"
                           >
                             移除
                           </button>

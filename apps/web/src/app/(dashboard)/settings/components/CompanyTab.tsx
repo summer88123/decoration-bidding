@@ -125,13 +125,13 @@ export function CompanyTab() {
         <div className="border border-border rounded-[6px]">
           <div className="px-4 py-3">
             <div
-              className="flex flex-wrap gap-1.5 items-center border border-border rounded-[6px] px-2 py-1.5 min-h-[38px] cursor-text bg-bg focus-within:border-[#0969da] focus-within:ring-[3px] focus-within:ring-[rgba(9,105,218,0.2)]"
+              className="flex flex-wrap gap-1.5 items-center border border-border rounded-[6px] px-2 py-1.5 min-h-[38px] cursor-text bg-bg focus-within:border-accent focus-within:ring-[3px] focus-within:ring-accent/20"
               onClick={() => document.getElementById('qual-input')?.focus()}
             >
               {qualifications.map((q) => (
-                <span key={q} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-[#ddf4ff] text-[#0969da] border border-[#b6d4f8]">
+                <span key={q} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-info-subtle text-accent border border-accent/30">
                   {q}
-                  <button type="button" onClick={() => removeTag(q)} className="text-[#0969da] leading-none hover:text-[#0550ae]">
+                  <button type="button" onClick={() => removeTag(q)} className="text-accent leading-none hover:text-accent-hover">
                     <X className="w-2.5 h-2.5" />
                   </button>
                 </span>

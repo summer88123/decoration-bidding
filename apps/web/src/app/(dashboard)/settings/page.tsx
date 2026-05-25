@@ -37,12 +37,7 @@ export default function SettingsPage() {
             <button
               key={tab.id}
               onClick={() => setActive(tab.id)}
-              className="w-full flex items-center gap-2 px-4 py-[7px] text-[13px] text-left transition-colors"
-              style={{
-                background: active === tab.id ? '#ddf4ff' : 'transparent',
-                color: active === tab.id ? '#0969da' : '#1f2328',
-                fontWeight: active === tab.id ? 500 : 400,
-              }}
+              className={`w-full flex items-center gap-2 px-4 py-[7px] text-[13px] text-left transition-colors ${active === tab.id ? 'bg-info-subtle text-accent font-medium' : 'text-fg hover:bg-surface font-normal'}`}
             >
               <span>{tab.icon}</span>
               <span>{tab.label}</span>

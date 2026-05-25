@@ -38,17 +38,16 @@ function inputCls() {
   return 'w-full'
 }
 
-// Category → badge color
-const CAT_STYLE: Record<string, { bg: string; color: string; border: string }> = {
-  '地面材料': { bg: '#ddf4ff', color: '#0969da', border: '#b6d4f8' },
-  '墙面材料': { bg: '#dafbe1', color: '#1a7f37', border: '#aceebb' },
-  '门窗':    { bg: '#fff8c5', color: '#9a6700', border: '#e3b341' },
+// Category → badge className
+const CAT_STYLE: Record<string, string> = {
+  '地面材料': 'bg-info-subtle text-accent border-accent/30',
+  '墙面材料': 'bg-success-subtle text-success border-success/30',
+  '门窗':    'bg-warning-subtle text-warning border-warning/30',
 }
 function catBadge(cat?: string) {
-  const s = cat ? (CAT_STYLE[cat] ?? { bg: '#ddf4ff', color: '#0969da', border: '#b6d4f8' }) : { bg: '#f6f8fa', color: '#656d76', border: '#d0d7de' }
+  const cls = cat ? (CAT_STYLE[cat] ?? 'bg-info-subtle text-accent border-accent/30') : 'bg-surface text-muted border-border'
   return (
-    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs border"
-      style={{ background: s.bg, color: s.color, borderColor: s.border }}>
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs border ${cls}`}>
       {cat ?? '—'}
     </span>
   )
