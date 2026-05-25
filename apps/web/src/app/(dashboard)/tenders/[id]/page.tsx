@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { Edit2, Trash2, Upload, ExternalLink, Plus, Loader2 } from 'lucide-react'
 import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import {
   getTender,
   updateTender,
@@ -15,14 +17,14 @@ import {
 
 // ─── 状态配置 ─────────────────────────────────────────────────────────────────
 
-const STATUS_MAP: Record<string, { label: string; className: string }> = {
-  PENDING:   { label: '待决策',   className: 'bg-warning-subtle text-warning' },
-  DECIDED:   { label: '决定投标', className: 'bg-info-subtle text-accent' },
-  BIDDING:   { label: '投标中',   className: 'bg-info-subtle text-accent' },
-  SUBMITTED: { label: '已提交',   className: 'bg-success-subtle text-success' },
-  WON:       { label: '已中标',   className: 'bg-success text-white' },
-  LOST:      { label: '已落标',   className: 'bg-danger-subtle text-danger' },
-  DECLINED:  { label: '已放弃',   className: 'bg-surface text-muted' },
+const STATUS_MAP: Record<string, { label: string; variant: 'default' | 'success' | 'info' | 'warning' | 'danger' | 'done'; className?: string }> = {
+  PENDING:   { label: '待决策',   variant: 'warning' },
+  DECIDED:   { label: '决定投标', variant: 'info' },
+  BIDDING:   { label: '投标中',   variant: 'info' },
+  SUBMITTED: { label: '已提交',   variant: 'success' },
+  WON:       { label: '已中标',   variant: 'success', className: 'bg-success text-white' },
+  LOST:      { label: '已落标',   variant: 'danger' },
+  DECLINED:  { label: '已放弃',   variant: 'default' },
 }
 
 // ─── Countdown ────────────────────────────────────────────────────────────────
@@ -223,14 +225,16 @@ function StatusFlow({
         </div>
 
         {canDecide && (
-          <button
-            onClick={onDecide}
-            disabled={deciding}
-            className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-[5px] bg-success hover:bg-success-hover text-white text-sm rounded-[6px] border border-[rgba(31,35,40,0.15)] font-medium transition-colors disabled:opacity-60 mb-2"
-          >
-            {deciding ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
-            决定投标
-          </button>
+           <Button
+             variant="primary"
+             size="md"
+             onClick={onDecide}
+             disabled={deciding}
+             className="w-full mb-2"
+           >
+             {deciding ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+             决定投标
+           </Button>
         )}
         {canDecline && (
           <button
@@ -360,13 +364,12 @@ export default function TenderDetailPage() {
               放弃投标
             </button>
           )}
-          <Link
-            href={`/bids/new?tenderId=${tender.id}`}
-            className="inline-flex items-center gap-1.5 px-4 py-[5px] bg-success hover:bg-success-hover text-white text-sm rounded-[6px] border border-[rgba(31,35,40,0.15)] font-medium transition-colors"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            创建投标
-          </Link>
+          <Button variant="primary" size="md" asChild>
+            <Link href={`/bids/new?tenderId=${tender.id}`}>
+              <Plus className="w-3.5 h-3.5" />
+              创建投标
+            </Link>
+          </Button>
         </div>
       </header>
 
@@ -375,11 +378,9 @@ export default function TenderDetailPage() {
         <div className="flex items-start justify-between gap-4 mb-6 flex-wrap">
           <div>
             <div className="flex items-center gap-2 mb-1.5">
-              <span
-                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusInfo.className}`}
-              >
+              <Badge variant={statusInfo.variant} className={statusInfo.className}>
                 {statusInfo.label}
-              </span>
+              </Badge>
               <span className="text-xs text-muted">
                 创建于 {tender.createdAt?.slice(0, 10)}
               </span>
