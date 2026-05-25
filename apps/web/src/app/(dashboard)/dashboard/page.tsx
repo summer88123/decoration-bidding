@@ -49,20 +49,20 @@ function isUrgent(deadline?: string) {
 function StatCard({
   label,
   value,
-  valueColor,
+  valueClassName,
   delta,
   deltaUp,
 }: {
   label: string
   value: string | number
-  valueColor: string
+  valueClassName?: string
   delta?: string
   deltaUp?: boolean
 }) {
   return (
     <div className="bg-bg border border-border rounded-[6px] p-4">
       <div className="text-xs text-muted mb-1">{label}</div>
-      <div className="text-2xl font-semibold tabular-nums" style={{ color: valueColor }}>
+      <div className={`text-2xl font-semibold tabular-nums ${valueClassName ?? ''}`}>
         {value}
       </div>
       {delta && (
@@ -148,10 +148,10 @@ export default function DashboardPage() {
       <main className="p-6 flex-1">
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-          <StatCard label="待决策" value={stats.pending} valueColor="#9a6700" delta="招标项目" />
-          <StatCard label="投标中" value={stats.bidding} valueColor="#0969da" delta={`↑ 共 ${stats.bidding} 个`} deltaUp />
-          <StatCard label="已提交" value={stats.submitted} valueColor="#8250df" delta="本季度" />
-          <StatCard label="中标率" value={`${winRate}%`} valueColor="#1a7f37" delta={stats.won + stats.lost > 0 ? `${stats.won} 中 / ${stats.won + stats.lost} 投` : '暂无记录'} deltaUp={winRate > 0} />
+          <StatCard label="待决策" value={stats.pending} valueClassName="text-warning" delta="招标项目" />
+          <StatCard label="投标中" value={stats.bidding} valueClassName="text-accent" delta={`↑ 共 ${stats.bidding} 个`} deltaUp />
+          <StatCard label="已提交" value={stats.submitted} valueClassName="text-done" delta="本季度" />
+          <StatCard label="中标率" value={`${winRate}%`} valueClassName="text-success" delta={stats.won + stats.lost > 0 ? `${stats.won} 中 / ${stats.won + stats.lost} 投` : '暂无记录'} deltaUp={winRate > 0} />
         </div>
 
         {/* Filter bar */}
@@ -170,7 +170,7 @@ export default function DashboardPage() {
                 onClick={() => { setActiveFilter(tab.value); setPage(1) }}
                 className={`px-3 py-[5px] rounded-[6px] text-xs border transition-colors ${
                   activeFilter === tab.value
-                    ? 'bg-[#0969da] text-white border-[#0969da]'
+                    ? 'bg-accent text-white border-accent'
                     : 'bg-bg text-muted border-border hover:bg-surface'
                 }`}
               >
@@ -191,7 +191,7 @@ export default function DashboardPage() {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-            className="px-3 py-[5px] text-xs border border-border rounded-[6px] bg-surface text-fg cursor-pointer"
+            className="px-3 py-[5px] text-xs border border-border rounded-[6px] bg-surface text-fg cursor-pointer focus:outline-none focus:border-accent focus:ring-[3px] focus:ring-accent/20"
           >
             <option value="deadline-asc">截标日期 ↑</option>
             <option value="deadline-desc">截标日期 ↓</option>
@@ -297,7 +297,7 @@ export default function DashboardPage() {
                     onClick={() => setPage(p)}
                     className={`px-3 py-[3px] text-xs border rounded-[6px] transition-colors ${
                       p === page
-                        ? 'bg-[#0969da] text-white border-[#0969da]'
+                        ? 'bg-accent text-white border-accent'
                         : 'bg-surface border-border hover:bg-inset'
                     }`}
                   >
