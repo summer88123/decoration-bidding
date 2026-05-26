@@ -3,7 +3,12 @@
  * Skill: parse-drawing
  * 分析施工图纸，提取物料清单（BOQ）条目及图纸坐标。
  * 逐页 + 逐条流式：每页使用 streamObject，LLM 每生成一个完整条目立即 yield。
- * 已接入 Langfuse 追踪，每页对应一个 generation。
+ *
+ * Langfuse 追踪双通道：
+ * 1. OTel 通道（via @langfuse/otel + LangfuseSpanProcessor）：
+ *    通过 experimental_telemetry 自动捕获 Vercel AI SDK 内部 spans（token 用量、延迟等）。
+ * 2. SDK 通道（via langfuse 主动上报）：
+ *    手动创建 trace/generation，记录业务元数据、页码、BOQ 条目及用户信息（userId = email）。
  */
 import { createOpenAI } from '@ai-sdk/openai'
 import type { BidItemFromAI } from '@decoration-bidding/shared-types'
@@ -11,6 +16,7 @@ import { createLogger } from '@decoration-bidding/shared-utils'
 import { generateObject, streamObject } from 'ai'
 import { z } from 'zod'
 import { config } from '../config.js'
+import { flushOtel } from '../instrumentation.js'
 import { langfuse } from '../langfuse.js'
 
 const logger = createLogger('parse-drawing')
@@ -106,19 +112,24 @@ export type StreamYield =
 // ─── 单页流式处理（streamObject，逐条 yield） ─────────────────────────────────
 /**
  * 使用 streamObject 逐条 yield BOQ 条目。
- * 检测到数组新增完整条目（partialObjectStream 中 items.length 增加且前 N-1 条完整）时立即 yield。
- * 若 streamObject 失败（如 thinking 未关闭导致 JSON 破损），降级为 generateObject。
+ * 检测到数组新增完整条目时立即 yield。
+ * 若 streamObject 失败，降级为 generateObject。
+ *
+ * experimental_telemetry 将 Vercel AI SDK 内部 spans 自动发送至 Langfuse（via OTel 通道）。
+ * langfuse.trace/generation 手动上报业务元数据（via SDK 通道）。
  */
 async function* processPageStream(
   page: ParsedPage,
   traceId: string | undefined,
   pageIndex: number,
   totalPages: number,
+  userEmail?: string,
 ): AsyncGenerator<BidItemFromAI> {
   const label = `第 ${page.pageNum}/${totalPages} 页`
   logger.info({ pageNum: page.pageNum, traceId }, `开始解析 ${label}`)
 
-  const generation = langfuse?.trace({ id: traceId })?.generation({
+  // SDK 通道：手动创建 generation，绑定用户 email 作为 userId
+  const generation = langfuse?.trace({ id: traceId, ...(userEmail ? { userId: userEmail } : {}) })?.generation({
     name: `stream-page${page.pageNum}`,
     model: config.DEFAULT_LLM_MODEL,
     modelParameters: { temperature: 1, mode: 'json' },
@@ -139,6 +150,16 @@ async function* processPageStream(
       system: SYSTEM_PROMPT,
       messages: buildPageMessages(page),
       ...thinkingOpts(),
+      // OTel 通道：启用 Vercel AI SDK 内置 telemetry，自动被 LangfuseSpanProcessor 捕获
+      experimental_telemetry: {
+        isEnabled: true,
+        functionId: `parse-drawing-page${page.pageNum}`,
+        metadata: {
+          pageNum: page.pageNum,
+          traceId: traceId ?? '',
+          ...(userEmail ? { userId: userEmail } : {}),
+        },
+      },
     })
 
     let lastYieldedCount = 0
@@ -184,7 +205,7 @@ async function* processPageStream(
       output: { items: allItems },
       usage: { input: usage?.promptTokens, output: usage?.completionTokens },
     })
-    await langfuse?.flushAsync()
+    await Promise.all([langfuse?.flushAsync(), flushOtel()])
   } catch (err) {
     // ── 降级：streamObject 失败时用 generateObject ──
     logger.warn({ err, pageNum: page.pageNum }, `${label} streamObject 失败，降级为 generateObject`)
@@ -197,6 +218,17 @@ async function* processPageStream(
         system: SYSTEM_PROMPT,
         messages: buildPageMessages(page),
         ...thinkingOpts(),
+        // OTel 通道：降级路径同样启用 telemetry
+        experimental_telemetry: {
+          isEnabled: true,
+          functionId: `parse-drawing-page${page.pageNum}-fallback`,
+          metadata: {
+            pageNum: page.pageNum,
+            traceId: traceId ?? '',
+            fallback: true,
+            ...(userEmail ? { userId: userEmail } : {}),
+          },
+        },
       })
       const items = object.items.map((item) => ({
         ...item,
@@ -214,11 +246,11 @@ async function* processPageStream(
         output: { items },
         usage: { input: usage?.promptTokens, output: usage?.completionTokens },
       })
-      await langfuse?.flushAsync()
+      await Promise.all([langfuse?.flushAsync(), flushOtel()])
     } catch (fallbackErr) {
       logger.error({ err: fallbackErr, pageNum: page.pageNum, traceId }, `${label} 解析失败，跳过`)
       generation?.end({ level: 'ERROR', statusMessage: String(fallbackErr) })
-      await langfuse?.flushAsync()
+      await Promise.all([langfuse?.flushAsync(), flushOtel()])
       // 不抛出，继续处理后续页
     }
   }
@@ -226,20 +258,29 @@ async function* processPageStream(
 
 // ─── execute（非流式，逐页处理后汇总） ────────────────────────────────────────
 
-export async function execute(pages: ParsedPage[], traceId?: string): Promise<BidItemFromAI[]> {
-  logger.info({ pages: pages.length, traceId }, '开始非流式解析（逐页模式）')
-  langfuse?.trace({ id: traceId, name: 'parse-drawing', input: { pageCount: pages.length } })
+export async function execute(
+  pages: ParsedPage[],
+  traceId?: string,
+  userEmail?: string,
+): Promise<BidItemFromAI[]> {
+  logger.info({ pages: pages.length, traceId, userEmail }, '开始非流式解析（逐页模式）')
+  langfuse?.trace({
+    id: traceId,
+    name: 'parse-drawing',
+    input: { pageCount: pages.length },
+    ...(userEmail ? { userId: userEmail } : {}),
+  })
 
   const allItems: BidItemFromAI[] = []
   for (let i = 0; i < pages.length; i++) {
-    for await (const item of processPageStream(pages[i], traceId, i, pages.length)) {
+    for await (const item of processPageStream(pages[i], traceId, i, pages.length, userEmail)) {
       allItems.push(item)
     }
   }
 
   logger.info({ total: allItems.length, traceId }, '非流式解析全部完成')
   langfuse?.trace({ id: traceId })?.update({ output: { itemCount: allItems.length } })
-  await langfuse?.flushAsync()
+  await Promise.all([langfuse?.flushAsync(), flushOtel()])
   return allItems
 }
 
@@ -253,14 +294,20 @@ export async function execute(pages: ParsedPage[], traceId?: string): Promise<Bi
 export async function* streamItems(
   pages: ParsedPage[],
   traceId?: string,
+  userEmail?: string,
 ): AsyncGenerator<StreamYield> {
-  logger.info({ pages: pages.length, traceId }, '开始流式解析（逐页逐条模式）')
-  langfuse?.trace({ id: traceId, name: 'parse-drawing-stream', input: { pageCount: pages.length } })
+  logger.info({ pages: pages.length, traceId, userEmail }, '开始流式解析（逐页逐条模式）')
+  langfuse?.trace({
+    id: traceId,
+    name: 'parse-drawing-stream',
+    input: { pageCount: pages.length },
+    ...(userEmail ? { userId: userEmail } : {}),
+  })
 
   let totalItems = 0
   for (let i = 0; i < pages.length; i++) {
     yield { kind: 'progress', page: pages[i].pageNum, total: pages.length }
-    for await (const item of processPageStream(pages[i], traceId, i, pages.length)) {
+    for await (const item of processPageStream(pages[i], traceId, i, pages.length, userEmail)) {
       yield { kind: 'item', data: item }
       totalItems++
     }
@@ -268,5 +315,5 @@ export async function* streamItems(
 
   logger.info({ total: totalItems, traceId }, '流式解析全部完成')
   langfuse?.trace({ id: traceId })?.update({ output: { itemCount: totalItems } })
-  await langfuse?.flushAsync()
+  await Promise.all([langfuse?.flushAsync(), flushOtel()])
 }

@@ -26,13 +26,13 @@ export class DocumentService {
     private readonly aiServiceUrl: string,
   ) {}
 
-  async uploadAndProcess(bidId: string, file: Buffer, filename: string) {
+  async uploadAndProcess(bidId: string, file: Buffer, filename: string, userEmail?: string) {
     const fileKey = await this.storage.save(file, filename)
     const fileUrl = this.storage.getUrl(fileKey)
     const doc = await BidDocumentRepository.create({ bidId, fileType: 'pdf', fileUrl })
 
     // 异步处理，不阻塞 HTTP 响应
-    this.processAsync(bidId, doc.id, file).catch(async (err: Error) => {
+    this.processAsync(bidId, doc.id, file, userEmail).catch(async (err: Error) => {
       logger.error({ err, docId: doc.id }, '处理失败')
       emitDocEvent(doc.id, { type: 'error', message: err.message })
       await BidDocumentRepository.updateStatus(doc.id, 'failed', { errorMsg: err.message })
@@ -41,7 +41,7 @@ export class DocumentService {
     return { documentId: doc.id, status: 'processing' as const }
   }
 
-  private async processAsync(bidId: string, docId: string, file: Buffer) {
+  private async processAsync(bidId: string, docId: string, file: Buffer, userEmail?: string) {
     await BidDocumentRepository.updateStatus(docId, 'processing')
 
     // Step 1: 解析 PDF
@@ -73,6 +73,7 @@ export class DocumentService {
         emitDocEvent(docId, { type: 'item', item: normalized as unknown as Record<string, unknown> })
       },
       (page, total) => { emitDocEvent(docId, { type: 'progress', message: `正在 AI 分析第 ${page}/${total} 页...` }) },
+      userEmail,
     )
     logger.info({ docId, items: items.length, ms: Date.now() - t2 }, 'AI 分析完成')
 
@@ -101,6 +102,7 @@ export class DocumentService {
     pages: ParsedPage[],
     onItem: (item: BidItemFromAI) => void,
     onPageProgress?: (page: number, total: number) => void,
+    userEmail?: string,
   ): Promise<BidItemFromAI[]> {
     // 超时：页数 × 3 分钟，最少 10 分钟
     const timeoutMs = Math.max(pages.length * 3 * 60 * 1000, 10 * 60 * 1000)
@@ -114,7 +116,7 @@ export class DocumentService {
       const res = await undiciFetch(`${this.aiServiceUrl}/ai/skills/parse-drawing/stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pages }),
+        body: JSON.stringify({ pages, userEmail }),
         signal: controller.signal,
         dispatcher: longRunningAgent,
       })

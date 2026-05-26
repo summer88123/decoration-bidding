@@ -1,4 +1,6 @@
 import 'dotenv/config'
+// OTel + Langfuse 初始化必须在所有其他模块之前执行
+import './instrumentation.js'
 import { buildApp } from './app.js'
 import { config } from './config.js'
 import { createLogger } from '@decoration-bidding/shared-utils'
