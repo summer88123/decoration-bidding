@@ -8,20 +8,23 @@
  */
 import { LangfuseSpanProcessor } from '@langfuse/otel'
 import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node'
+import { createLogger } from '@decoration-bidding/shared-utils'
 import { config } from './config.js'
+
+const logger = createLogger('instrumentation')
 
 let _spanProcessor: LangfuseSpanProcessor | null = null
 
 function initOtel() {
   if (!config.LANGFUSE_BASE_URL || !config.LANGFUSE_PUBLIC_KEY || !config.LANGFUSE_SECRET_KEY) {
-    console.log('[instrumentation] Langfuse 未配置，OTel 集成已跳过')
+    logger.info('Langfuse 未配置，OTel 集成已跳过')
     return
   }
   if (
     config.LANGFUSE_PUBLIC_KEY.includes('your-public-key') ||
     config.LANGFUSE_SECRET_KEY.includes('your-secret-key')
   ) {
-    console.log('[instrumentation] Langfuse 使用占位符密钥，OTel 集成已跳过')
+    logger.info('Langfuse 使用占位符密钥，OTel 集成已跳过')
     return
   }
 
@@ -36,7 +39,7 @@ function initOtel() {
   })
 
   tracerProvider.register()
-  console.log(`[instrumentation] OTel + Langfuse 已初始化，上报至 ${config.LANGFUSE_BASE_URL}`)
+  logger.info(`OTel + Langfuse 已初始化，上报至 ${config.LANGFUSE_BASE_URL}`)
 }
 
 initOtel()

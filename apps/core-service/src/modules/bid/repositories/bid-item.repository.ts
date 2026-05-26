@@ -1,6 +1,9 @@
 // apps/bid-service/src/repositories/bid-item.repository.ts
 import { prisma } from '@decoration-bidding/database'
+import { createLogger } from '@decoration-bidding/shared-utils'
 import type { BidItemFromAI } from '@decoration-bidding/shared-types'
+
+const logger = createLogger('bid-item-repository')
 
 export const BidItemRepository = {
   findByBidId(bidId: string) {
@@ -17,7 +20,7 @@ export const BidItemRepository = {
       (item) => item.itemName && typeof item.itemName === 'string' && item.itemName.trim(),
     )
     if (validItems.length !== items.length) {
-      console.warn(`[BidItemRepository] 过滤掉 ${items.length - validItems.length} 条无效条目（itemName 为空）`)
+      logger.warn(`过滤掉 ${items.length - validItems.length} 条无效条目（itemName 为空）`)
     }
     if (validItems.length === 0) return Promise.resolve({ count: 0 })
     return prisma.bidItem.createMany({

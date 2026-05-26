@@ -1,5 +1,8 @@
 import nodemailer from 'nodemailer'
+import { createLogger } from '@decoration-bidding/shared-utils'
 import { config } from '../../../config.js'
+
+const logger = createLogger('mail-service')
 
 // 是否已配置 SMTP（HOST 非默认占位值且有账号密码）
 const smtpConfigured = !!(
@@ -21,7 +24,7 @@ const transporter = nodemailer.createTransport({
 
 export async function sendPasswordResetEmail(to: string, resetUrl: string): Promise<void> {
   if (!smtpConfigured) {
-    console.warn('[MailService] SMTP 未配置，跳过发送重置密码邮件')
+    logger.warn('SMTP 未配置，跳过发送重置密码邮件')
     return
   }
   await transporter.sendMail({
@@ -35,7 +38,7 @@ export async function sendPasswordResetEmail(to: string, resetUrl: string): Prom
 
 export async function sendInviteEmail(email: string, name: string, tempPassword: string): Promise<void> {
   if (!smtpConfigured) {
-    console.warn('[MailService] SMTP 未配置，跳过发送邀请邮件')
+    logger.warn('SMTP 未配置，跳过发送邀请邮件')
     return
   }
   const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:3000'

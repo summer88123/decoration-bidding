@@ -1,9 +1,11 @@
 import { randomBytes } from 'crypto'
 import bcrypt from 'bcrypt'
 import { Prisma } from '@decoration-bidding/database'
+import { createLogger } from '@decoration-bidding/shared-utils'
 import * as repo from '../repositories/org.repository.js'
 import { sendInviteEmail } from '../../auth/services/mail.service.js'
 
+const logger = createLogger('org-service')
 const SALT_ROUNDS = 10
 
 // ---------------------------------------------------------------------------
@@ -82,7 +84,7 @@ export async function inviteMember(
 
   // 异步发送邀请邮件，不阻塞主流程（未配置 SMTP 时自动跳过）
   sendInviteEmail(data.email, data.name, tempPassword).catch((err: unknown) => {
-    console.error('[OrgService] sendInviteEmail failed:', err)
+    logger.error({ err }, 'sendInviteEmail 发送失败')
   })
 
   return user
