@@ -1,8 +1,8 @@
 'use client'
 
 // apps/web/src/hooks/useBidDocument.ts
-import { useState, useRef, useCallback } from 'react'
-import { bidApi, type BidItemData } from '../lib/api/bid.api'
+import { useState, useRef, useCallback, useEffect } from 'react'
+import { bidApi, type BidItemData, type BidDocumentItem } from '../lib/api/bid.api'
 
 export interface UseBidDocumentState {
   uploading: boolean
@@ -21,6 +21,7 @@ export function useBidDocument(bidId: string) {
   })
   const esRef = useRef<EventSource | null>(null)
   const [localFileUrl, setLocalFileUrl] = useState<string | undefined>()
+  const [lastDocument, setLastDocument] = useState<BidDocumentItem | null>(null)
 
   const closeSSE = useCallback(() => {
     esRef.current?.close()
@@ -97,5 +98,22 @@ export function useBidDocument(bidId: string) {
     [bidId, connectSSE, closeSSE],
   )
 
-  return { state, localFileUrl, uploadFile }
+  // mount 时拉取文档列表，若存在 completed 文档则回显
+  useEffect(() => {
+    let cancelled = false
+    bidApi.listDocuments(bidId).then((docs) => {
+      if (cancelled) return
+      const completed = docs.find((d) => d.status === 'completed')
+      if (!completed) return
+      setLastDocument(completed)
+      setLocalFileUrl(completed.fileUrl)
+      void bidApi.getBidItems(bidId).then((items) => {
+        if (cancelled) return
+        setState((s) => ({ ...s, completed: true, items }))
+      })
+    }).catch(() => {})
+    return () => { cancelled = true }
+  }, [bidId])
+
+  return { state, localFileUrl, uploadFile, lastDocument }
 }

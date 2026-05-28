@@ -21,4 +21,12 @@ export const BidDocumentRepository = {
       data: { status, ...extra },
     })
   },
+
+  findByBidId(bidId: string) {
+    return prisma.bidDocument.findMany({
+      where: { bidId },
+      select: { id: true, originalName: true, status: true, createdAt: true, fileUrl: true },
+      orderBy: { createdAt: 'desc' },
+    })
+  },
 }

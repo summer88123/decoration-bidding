@@ -6,7 +6,7 @@ import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
 import { Card } from '../ui/card'
-import { bidApi, type BidData } from '../../lib/api/bid.api'
+import { bidApi, type BidData, type BidDocumentItem } from '../../lib/api/bid.api'
 import { useToast } from '../../hooks/use-toast'
 
 interface Props { bidId: string }
@@ -15,6 +15,7 @@ export function EconomicTab({ bidId }: Props) {
   const [bid, setBid] = useState<BidData | null>(null)
   const [profitMargin, setProfitMargin] = useState<string>('0')
   const [applying, setApplying] = useState(false)
+  const [documents, setDocuments] = useState<BidDocumentItem[]>([])
   const { toast } = useToast()
   const router = useRouter()
 
@@ -24,6 +25,12 @@ export function EconomicTab({ bidId }: Props) {
         setBid(res.data.data)
         setProfitMargin(String(res.data.data.profitMarginPct ?? 0))
       })
+      .catch(() => {})
+  }, [bidId])
+
+  useEffect(() => {
+    bidApi.listDocuments(bidId)
+      .then(setDocuments)
       .catch(() => {})
   }, [bidId])
 
@@ -51,6 +58,17 @@ export function EconomicTab({ bidId }: Props) {
   const totalCost = Number(bid.totalCost)
   const totalBid = Number(bid.totalBidPrice)
   const actualMargin = totalCost > 0 ? ((totalBid - totalCost) / totalCost * 100).toFixed(1) : '—'
+
+  function statusBadge(status: string) {
+    const map: Record<string, { label: string; className: string }> = {
+      pending:    { label: '等待中',  className: 'bg-gray-100 text-gray-600' },
+      processing: { label: '解析中',  className: 'bg-yellow-100 text-yellow-700' },
+      completed:  { label: '已完成',  className: 'bg-green-100 text-green-700' },
+      failed:     { label: '失败',    className: 'bg-red-100 text-red-600' },
+    }
+    const { label, className } = map[status] ?? { label: status, className: 'bg-gray-100 text-gray-500' }
+    return <span className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${className}`}>{label}</span>
+  }
 
   return (
     <div className="p-6 space-y-6 max-w-2xl">
@@ -98,6 +116,23 @@ export function EconomicTab({ bidId }: Props) {
           </Button>
         </div>
       </Card>
+
+      {/* 已上传文件 */}
+      {documents.length > 0 && (
+        <Card className="p-4 space-y-2">
+          <h3 className="font-medium text-gray-900 text-sm">已上传图纸</h3>
+          <ul className="space-y-1">
+            {documents.map((doc) => (
+              <li key={doc.id} className="flex items-center justify-between text-sm py-1">
+                <span className="text-gray-700 truncate max-w-xs">
+                  {doc.originalName ?? '未命名文件'}
+                </span>
+                {statusBadge(doc.status)}
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
 
       {/* 进入经济标工作台 */}
       <Button

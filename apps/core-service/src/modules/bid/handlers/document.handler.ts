@@ -3,6 +3,7 @@ import type { FastifyRequest, FastifyReply } from 'fastify'
 import { ok, fail } from '@decoration-bidding/shared-utils'
 import { findUserById } from '../../auth/repositories/auth.repository.js'
 import type { DocumentService } from '../services/document.service.js'
+import { BidDocumentRepository } from '../repositories/bid-document.repository.js'
 
 export function createDocumentHandlers(svc: DocumentService) {
   return {
@@ -40,6 +41,14 @@ export function createDocumentHandlers(svc: DocumentService) {
     ) {
       const items = await svc.getBidItems(req.params.bidId)
       return reply.send(ok(items))
+    },
+
+    async listDocuments(
+      req: FastifyRequest<{ Params: { bidId: string } }>,
+      reply: FastifyReply,
+    ) {
+      const docs = await BidDocumentRepository.findByBidId(req.params.bidId)
+      return reply.send(ok(docs))
     },
   }
 }

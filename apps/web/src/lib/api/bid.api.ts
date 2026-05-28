@@ -27,6 +27,14 @@ export interface DocumentStatus {
   errorMsg?: string
 }
 
+export interface BidDocumentItem {
+  id: string
+  originalName: string | null
+  status: 'pending' | 'processing' | 'completed' | 'failed'
+  createdAt: string
+  fileUrl: string
+}
+
 export interface UploadResult {
   documentId: string
   status: 'processing'
@@ -140,6 +148,14 @@ export const bidApi = {
 
   updateTechnical: (bidId: string, data: Partial<BidTechnicalData>) =>
     apiClient.patch(`/api/bids/${bidId}/technical`, data),
+
+  // ── 文档 ─────────────────────────────────────────────────────
+  listDocuments: async (bidId: string): Promise<BidDocumentItem[]> => {
+    const res = await apiClient.get<{ success: boolean; data: BidDocumentItem[] }>(
+      `/api/bids/${bidId}/documents`,
+    )
+    return res.data.data
+  },
 
   // ── 经济标条目 ───────────────────────────────────────────────
   listItems: (bidId: string) =>

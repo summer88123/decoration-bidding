@@ -50,6 +50,7 @@ export const bidRoutes: FastifyPluginAsync = async (app) => {
   app.patch('/bids/:bidId/items/reorder', { preHandler: [requireAuth] }, itemsHandlers.reorder as H)
 
   // ── 文件路由（原有，保留）────────────────────────────────────────
+  app.get('/bids/:bidId/documents', { preHandler: [requireAuth] }, docHandlers.listDocuments as H)
   app.post('/bids/:bidId/documents', { preHandler: [requireAuth] }, docHandlers.upload as H)
   app.get('/bids/:bidId/documents/:docId/status', docHandlers.getStatus as H)
 
