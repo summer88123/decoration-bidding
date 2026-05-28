@@ -142,7 +142,7 @@ model BidItem {
   ifcElementId  String?
 
   bid      Bid          @relation(fields: [bidId], references: [id], onDelete: Cascade)
-  document BidDocument? @relation(fields: [documentId], references: [id])
+  document BidDocument? @relation(fields: [documentId], references: [id], onDelete: SetNull)
 
   @@index([bidId])
 }
