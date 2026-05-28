@@ -3,7 +3,7 @@ import { prisma } from '@decoration-bidding/database'
 import type { DocumentStatus } from '@decoration-bidding/shared-types'
 
 export const BidDocumentRepository = {
-  create(data: { bidId: string; fileType: string; fileUrl: string }) {
+  create(data: { bidId: string; fileType: string; fileUrl: string; originalName?: string }) {
     return prisma.bidDocument.create({ data })
   },
 

@@ -29,7 +29,7 @@ export class DocumentService {
   async uploadAndProcess(bidId: string, file: Buffer, filename: string, userEmail?: string) {
     const fileKey = await this.storage.save(file, filename)
     const fileUrl = this.storage.getUrl(fileKey)
-    const doc = await BidDocumentRepository.create({ bidId, fileType: 'pdf', fileUrl })
+    const doc = await BidDocumentRepository.create({ bidId, fileType: 'pdf', fileUrl, originalName: filename })
 
     // 异步处理，不阻塞 HTTP 响应
     this.processAsync(bidId, doc.id, file, userEmail).catch(async (err: Error) => {

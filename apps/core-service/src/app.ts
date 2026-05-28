@@ -6,6 +6,8 @@ import rateLimit from '@fastify/rate-limit'
 import jwt from '@fastify/jwt'
 import multipart from '@fastify/multipart'
 import cookie from '@fastify/cookie'
+import fastifyStatic from '@fastify/static'
+import path from 'node:path'
 import { config } from './config.js'
 import { errorHandler } from './shared/middleware/error.js'
 import { bidRoutes } from './modules/bid/routes.js'
@@ -54,6 +56,14 @@ export async function buildApp() {
   })
   await app.register(multipart, { limits: { fileSize: 50 * 1024 * 1024 } })
   await app.register(cookie)
+
+  // 静态文件服务：serve 上传目录（本地存储模式）
+  const uploadDir = path.resolve(config.UPLOAD_DIR)
+  await app.register(fastifyStatic, {
+    root: uploadDir,
+    prefix: '/uploads/',
+    decorateReply: false,
+  })
 
   app.setErrorHandler(errorHandler)
 
