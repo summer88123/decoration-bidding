@@ -258,16 +258,18 @@ export function EconomicWorkspace({ bidId }: Props) {
             onClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void handlePromptConfirm() } else if (e.key === 'Escape') handlePromptCancel() }}
           >
-            <h2 className="text-base font-semibold text-gray-900 mb-1">AI 解析提示词（可选）</h2>
+            <h2 className="text-base font-semibold text-gray-900 mb-1">指定识别项目（可选）</h2>
             <p className="text-xs text-gray-500 mb-4">
-              输入对图纸的补充说明，帮助 AI 更准确地提取工程量清单。例如：「本图纸为客厅区域，单位为平方米」
+              描述需要从图纸中提取的项目类型，AI 将只识别符合要求的条目。留空则识别所有项目。
+              <br />
+              <span className="text-gray-400">例如：「只提取地面铺装类项目」、「识别卫生间区域的防水和瓷砖」</span>
             </p>
             <textarea
               autoFocus
               rows={4}
               value={customPrompt}
               onChange={(e) => setCustomPrompt(e.target.value)}
-              placeholder="（留空则使用默认提示词）"
+              placeholder="（留空则识别图纸中所有可见工程量条目）"
               className="w-full border rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <div className="flex justify-end gap-2 mt-4">
