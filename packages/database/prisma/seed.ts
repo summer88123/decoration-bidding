@@ -44,7 +44,8 @@ async function main() {
     create: {
       id: 'test-bid',
       tenderId: tender.id,
-      status: 'draft',
+      companyId: company.id,
+      status: 'DRAFT',
     },
   })
   console.log('✓ Bid:', bid.id)

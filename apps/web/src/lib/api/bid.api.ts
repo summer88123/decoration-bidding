@@ -159,6 +159,12 @@ export const bidApi = {
     return res.data.data
   },
 
+  deleteDocument: (bidId: string, docId: string) =>
+    apiClient.delete(`/api/bids/${bidId}/documents/${docId}`),
+
+  deleteBid: (bidId: string) =>
+    apiClient.delete(`/api/bids/${bidId}`),
+
   // ── 经济标条目 ───────────────────────────────────────────────
   listItems: (bidId: string, documentId?: string) => {
     const params = documentId ? { documentId } : {}

@@ -1,11 +1,12 @@
 'use client'
 // apps/web/src/components/bid/EconomicWorkspace.tsx
 import { useRef, useState, useEffect, useCallback } from 'react'
+import { useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useBidDocument } from '../../hooks/useBidDocument'
 import { BidItemTable } from './BidItemTable'
-import { bidApi, type BidItemData, type BidDocumentItem } from '../../lib/api/bid.api'
+import { bidApi, type BidItemData } from '../../lib/api/bid.api'
 import { useToast } from '../../hooks/use-toast'
 
 const PdfViewer = dynamic(() => import('./PdfViewer').then((m) => m.PdfViewer), {
@@ -25,64 +26,51 @@ function parseRegion(raw?: string): DrawingRegion | null {
 interface Props { bidId: string }
 
 export function EconomicWorkspace({ bidId }: Props) {
+  const searchParams = useSearchParams()
+  const documentId = searchParams.get('documentId') ?? undefined
+
   const { state, localFileUrl, uploadFile, lastDocument } = useBidDocument(bidId)
   const [manualItems, setManualItems] = useState<BidItemData[]>([])
   const [selectedItem, setSelectedItem] = useState<BidItemData | null>(null)
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
-  const [documents, setDocuments] = useState<BidDocumentItem[]>([])
-  const [selectedDocId, setSelectedDocId] = useState<string | undefined>()
   const [selectedFileUrl, setSelectedFileUrl] = useState<string | undefined>()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
 
-  // 加载指定文档（或全部）的条目
-  const loadItems = useCallback((documentId?: string) => {
-    bidApi.getBidItems(bidId, documentId)
+  const loadItems = useCallback((docId?: string) => {
+    bidApi.getBidItems(bidId, docId)
       .then(setManualItems)
       .catch(() => {})
   }, [bidId])
 
-  // mount 时加载文档列表，默认选中第一个 completed 文档
   useEffect(() => {
-    bidApi.listDocuments(bidId)
-      .then((docs) => {
-        setDocuments(docs)
-        if (!selectedDocId) {
+    if (documentId) {
+      bidApi.listDocuments(bidId)
+        .then((docs) => {
+          const doc = docs.find((d) => d.id === documentId)
+          if (doc) setSelectedFileUrl(doc.fileUrl)
+        })
+        .catch(() => {})
+      loadItems(documentId)
+    } else {
+      bidApi.listDocuments(bidId)
+        .then((docs) => {
           const defaultDoc = docs.find((d) => d.status === 'completed')
-          if (defaultDoc) {
-            setSelectedDocId(defaultDoc.id)
-            setSelectedFileUrl(defaultDoc.fileUrl)
-            loadItems(defaultDoc.id)
-            return
-          }
-        }
-        loadItems(selectedDocId)
-      })
-      .catch(() => { loadItems() })
+          if (defaultDoc) setSelectedFileUrl(defaultDoc.fileUrl)
+          loadItems(undefined)
+        })
+        .catch(() => { loadItems() })
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bidId])
+  }, [bidId, documentId])
 
-  // 上传新文档完成后刷新文档列表
   useEffect(() => {
     if (state.completed && lastDocument) {
-      bidApi.listDocuments(bidId)
-        .then(setDocuments)
-        .catch(() => {})
-      setSelectedDocId(lastDocument.id)
       setSelectedFileUrl(lastDocument.fileUrl)
+      loadItems(lastDocument.id)
     }
-  }, [state.completed, lastDocument, bidId])
+  }, [state.completed, lastDocument, loadItems])
 
-  // 切换文档
-  function handleSelectDoc(doc: BidDocumentItem) {
-    setSelectedDocId(doc.id)
-    setSelectedFileUrl(doc.fileUrl)
-    loadItems(doc.id)
-    setSelectedItem(null)
-    setSelectedIndex(null)
-  }
-
-  // AI 解析完的条目优先展示；否则展示手动条目
   const displayItems = state.items.length > 0 ? state.items : manualItems
 
   async function handleAddItem() {
@@ -103,7 +91,7 @@ export function EconomicWorkspace({ bidId }: Props) {
   async function handleUpdateItem(itemId: string, data: Partial<BidItemData>) {
     try {
       await bidApi.updateItem(bidId, itemId, data)
-      loadItems(selectedDocId)
+      loadItems(documentId)
     } catch {
       toast({ title: '保存失败', variant: 'destructive' })
     }
@@ -119,12 +107,10 @@ export function EconomicWorkspace({ bidId }: Props) {
   }
 
   const highlightRegion = selectedItem ? parseRegion(selectedItem.drawingRegion) : null
-  // 优先级：SSE 上传中的本地 Blob URL > 选中文档 fileUrl
   const displayFileUrl = localFileUrl ?? selectedFileUrl
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
-      {/* Header */}
       <div className="flex items-center justify-between px-6 py-3 bg-white border-b shadow-sm">
         <div className="flex items-center gap-4">
           <Link
@@ -164,29 +150,8 @@ export function EconomicWorkspace({ bidId }: Props) {
         </div>
       </div>
 
-      {/* 主体左右分屏 */}
       <div className="flex flex-1 overflow-hidden">
-        {/* 左：清单 */}
         <div className="w-1/2 border-r flex flex-col bg-white">
-          {/* 文档切换（有多份时显示） */}
-          {documents.length > 1 && (
-            <div className="border-b px-4 py-2 space-y-1">
-              <p className="text-xs text-gray-500 font-medium">图纸文件</p>
-              {documents.map((doc) => (
-                <button
-                  key={doc.id}
-                  onClick={() => handleSelectDoc(doc)}
-                  className={`w-full text-left text-xs px-2 py-1.5 rounded truncate transition-colors ${
-                    selectedDocId === doc.id
-                      ? 'bg-blue-50 text-blue-700 font-medium'
-                      : 'text-gray-600 hover:bg-gray-50'
-                  }`}
-                >
-                  {doc.originalName ?? '未命名'}
-                </button>
-              ))}
-            </div>
-          )}
           <div className="px-4 py-2 border-b flex items-center justify-between">
             <span className="text-sm font-medium text-gray-600">
               工程量清单
@@ -242,7 +207,6 @@ export function EconomicWorkspace({ bidId }: Props) {
           </div>
         </div>
 
-        {/* 右：PDF 预览 */}
         <div className="w-1/2 flex flex-col bg-gray-100">
           <div className="px-4 py-2 bg-white border-b text-sm font-medium text-gray-600 flex items-center gap-2">
             图纸预览

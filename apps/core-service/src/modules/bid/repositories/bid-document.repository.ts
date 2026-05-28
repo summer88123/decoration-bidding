@@ -29,4 +29,8 @@ export const BidDocumentRepository = {
       orderBy: { createdAt: 'desc' },
     })
   },
+
+  delete(id: string) {
+    return prisma.bidDocument.delete({ where: { id } })
+  },
 }

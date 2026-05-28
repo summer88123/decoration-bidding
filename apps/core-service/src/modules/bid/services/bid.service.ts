@@ -32,8 +32,13 @@ export class BidService {
     return BidRepository.findByTenderId(tenderId, companyId)
   }
 
-  async updateBid(id: string, companyId: string, dto: {
-    name?: string
+  async deleteBid(id: string, companyId: string) {
+    await this.getBid(id, companyId)
+    // BidItem、BidDocument、BidCommercial、BidTechnical 均有 onDelete: Cascade，Prisma 自动级联
+    await prisma.bid.delete({ where: { id } })
+  }
+
+  async updateBid(id: string, companyId: string, dto: {    name?: string
     assignedTo?: string
     profitMarginPct?: number
   }) {

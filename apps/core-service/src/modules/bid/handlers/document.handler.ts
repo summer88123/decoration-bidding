@@ -4,6 +4,7 @@ import { ok, fail } from '@decoration-bidding/shared-utils'
 import { findUserById } from '../../auth/repositories/auth.repository.js'
 import type { DocumentService } from '../services/document.service.js'
 import { BidDocumentRepository } from '../repositories/bid-document.repository.js'
+import { BidItemRepository } from '../repositories/bid-item.repository.js'
 
 export function createDocumentHandlers(svc: DocumentService) {
   return {
@@ -49,6 +50,20 @@ export function createDocumentHandlers(svc: DocumentService) {
     ) {
       const docs = await BidDocumentRepository.findByBidId(req.params.bidId)
       return reply.send(ok(docs))
+    },
+
+    async deleteDocument(
+      req: FastifyRequest<{ Params: { bidId: string; docId: string } }>,
+      reply: FastifyReply,
+    ) {
+      const doc = await BidDocumentRepository.findById(req.params.docId)
+      if (!doc || doc.bidId !== req.params.bidId) {
+        return reply.status(404).send(fail('NOT_FOUND', '文档不存在'))
+      }
+      // 先删除该文档的所有条目，再删文档本身
+      await BidItemRepository.deleteByDocumentId(req.params.docId)
+      await BidDocumentRepository.delete(req.params.docId)
+      return reply.code(204).send()
     },
   }
 }

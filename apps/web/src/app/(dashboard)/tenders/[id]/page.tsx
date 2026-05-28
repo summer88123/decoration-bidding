@@ -267,6 +267,7 @@ function BidListSection({ tenderId }: { tenderId: string }) {
   const router = useRouter()
   const [bids, setBids] = useState<BidData[]>([])
   const [creating, setCreating] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const { toast } = useToast()
 
   useEffect(() => {
@@ -284,6 +285,21 @@ function BidListSection({ tenderId }: { tenderId: string }) {
       toast({ title: '创建失败', variant: 'destructive' })
     } finally {
       setCreating(false)
+    }
+  }
+
+  async function deleteBid(e: React.MouseEvent, bidId: string) {
+    e.stopPropagation()
+    if (!confirm('确认删除此投标方案？此操作不可撤销。')) return
+    setDeletingId(bidId)
+    try {
+      await bidApi.deleteBid(bidId)
+      setBids((prev) => prev.filter((b) => b.id !== bidId))
+      toast({ title: '已删除投标方案' })
+    } catch {
+      toast({ title: '删除失败', variant: 'destructive' })
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -321,6 +337,14 @@ function BidListSection({ tenderId }: { tenderId: string }) {
                 <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
                   {BID_STATUS_LABEL[bid.status] ?? bid.status}
                 </span>
+                <button
+                  onClick={(e) => deleteBid(e, bid.id)}
+                  disabled={deletingId === bid.id}
+                  className="p-1 text-muted hover:text-red-500 transition-colors disabled:opacity-50"
+                  title="删除投标方案"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
               </div>
             </div>
           ))}

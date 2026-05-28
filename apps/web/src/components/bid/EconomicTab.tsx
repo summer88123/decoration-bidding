@@ -2,6 +2,7 @@
 // apps/web/src/components/bid/EconomicTab.tsx
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { Trash2 } from 'lucide-react'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
@@ -16,6 +17,7 @@ export function EconomicTab({ bidId }: Props) {
   const [profitMargin, setProfitMargin] = useState<string>('0')
   const [applying, setApplying] = useState(false)
   const [documents, setDocuments] = useState<BidDocumentItem[]>([])
+  const [deletingDocId, setDeletingDocId] = useState<string | null>(null)
   const { toast } = useToast()
   const router = useRouter()
 
@@ -44,6 +46,20 @@ export function EconomicTab({ bidId }: Props) {
       toast({ title: '应用失败', variant: 'destructive' })
     } finally {
       setApplying(false)
+    }
+  }
+
+  async function deleteDocument(docId: string) {
+    if (!confirm('确认删除此文档及其所有工程量条目？')) return
+    setDeletingDocId(docId)
+    try {
+      await bidApi.deleteDocument(bidId, docId)
+      setDocuments((prev) => prev.filter((d) => d.id !== docId))
+      toast({ title: '文档已删除' })
+    } catch {
+      toast({ title: '删除失败', variant: 'destructive' })
+    } finally {
+      setDeletingDocId(null)
     }
   }
 
@@ -123,11 +139,24 @@ export function EconomicTab({ bidId }: Props) {
           <h3 className="font-medium text-gray-900 text-sm">已上传图纸</h3>
           <ul className="space-y-1">
             {documents.map((doc) => (
-              <li key={doc.id} className="flex items-center justify-between text-sm py-1">
-                <span className="text-gray-700 truncate max-w-xs">
+              <li key={doc.id} className="flex items-center justify-between text-sm py-1 gap-2">
+                <button
+                  className="text-gray-700 truncate max-w-xs text-left hover:text-blue-600 transition-colors"
+                  onClick={() => router.push(`/bids/${bidId}/economic?documentId=${doc.id}`)}
+                >
                   {doc.originalName ?? '未命名文件'}
-                </span>
-                {statusBadge(doc.status)}
+                </button>
+                <div className="flex items-center gap-2 shrink-0">
+                  {statusBadge(doc.status)}
+                  <button
+                    onClick={() => deleteDocument(doc.id)}
+                    disabled={deletingDocId === doc.id}
+                    className="p-1 text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50"
+                    title="删除此文档"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </li>
             ))}
           </ul>

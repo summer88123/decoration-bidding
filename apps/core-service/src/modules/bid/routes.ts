@@ -30,6 +30,7 @@ export const bidRoutes: FastifyPluginAsync = async (app) => {
   app.patch('/bids/:bidId', { preHandler: [requireAuth] }, bidHandlers.update as H)
   app.patch('/bids/:bidId/status', { preHandler: [requireAuth] }, bidHandlers.changeStatus as H)
   app.patch('/bids/:bidId/profit-margin', { preHandler: [requireAuth] }, bidHandlers.applyProfitMargin as H)
+  app.delete('/bids/:bidId', { preHandler: [requireAuth] }, bidHandlers.delete as H)
 
   // 按招标查询投标列表
   app.get('/tenders/:tenderId/bids', { preHandler: [requireAuth] }, bidHandlers.getByTender as H)
@@ -52,6 +53,7 @@ export const bidRoutes: FastifyPluginAsync = async (app) => {
   // ── 文件路由（原有，保留）────────────────────────────────────────
   app.get('/bids/:bidId/documents', { preHandler: [requireAuth] }, docHandlers.listDocuments as H)
   app.post('/bids/:bidId/documents', { preHandler: [requireAuth] }, docHandlers.upload as H)
+  app.delete('/bids/:bidId/documents/:docId', { preHandler: [requireAuth] }, docHandlers.deleteDocument as H)
   app.get('/bids/:bidId/documents/:docId/status', docHandlers.getStatus as H)
 
   // SSE 流（原有，保留）

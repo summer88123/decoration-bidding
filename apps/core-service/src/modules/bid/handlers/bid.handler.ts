@@ -73,6 +73,15 @@ export function createBidHandlers() {
       )
       return reply.send({ success: true, data: bid })
     },
+
+    async delete(
+      req: FastifyRequest<{ Params: { bidId: string } }>,
+      reply: FastifyReply,
+    ) {
+      const user = req.authUser
+      await bidService.deleteBid(req.params.bidId, user.companyId)
+      return reply.code(204).send()
+    },
   }
 }
 
