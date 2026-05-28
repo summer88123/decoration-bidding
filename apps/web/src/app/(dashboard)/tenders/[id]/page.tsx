@@ -15,6 +15,7 @@ import {
   type Tender,
 } from '@/lib/tenders-api'
 import { bidApi, type BidData } from '@/lib/api/bid.api'
+import { CreateBidModal } from '@/components/bid/CreateBidModal'
 import { useToast } from '@/hooks/use-toast'
 
 // ─── 状态配置 ─────────────────────────────────────────────────────────────────
@@ -266,7 +267,7 @@ const BID_STATUS_LABEL: Record<string, string> = {
 function BidListSection({ tenderId }: { tenderId: string }) {
   const router = useRouter()
   const [bids, setBids] = useState<BidData[]>([])
-  const [creating, setCreating] = useState(false)
+  const [modalOpen, setModalOpen] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const { toast } = useToast()
 
@@ -276,16 +277,9 @@ function BidListSection({ tenderId }: { tenderId: string }) {
       .catch(() => {})
   }, [tenderId])
 
-  async function createBid() {
-    setCreating(true)
-    try {
-      const res = await bidApi.create({ tenderId, name: 'A 方案' })
-      router.push(`/bids/${res.data.data.id}`)
-    } catch {
-      toast({ title: '创建失败', variant: 'destructive' })
-    } finally {
-      setCreating(false)
-    }
+  async function handleCreate(name: string) {
+    const res = await bidApi.create({ tenderId, name })
+    router.push(`/bids/${res.data.data.id}`)
   }
 
   async function deleteBid(e: React.MouseEvent, bidId: string) {
@@ -304,53 +298,59 @@ function BidListSection({ tenderId }: { tenderId: string }) {
   }
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-sm text-muted">共 {bids.length} 个投标方案</span>
-        <button
-          onClick={createBid}
-          disabled={creating}
-          className="inline-flex items-center gap-1.5 px-3 py-1 bg-success hover:bg-success-hover text-white text-xs rounded font-medium transition-colors disabled:opacity-50"
-        >
-          <Plus className="w-3 h-3" />
-          {creating ? '创建中…' : '创建投标方案'}
-        </button>
-      </div>
-      {bids.length === 0 ? (
-        <div className="text-center py-8">
-          <p className="text-sm text-muted mb-2">暂无投标方案</p>
-          <p className="text-xs text-muted">点击「创建投标方案」开始编制标书</p>
+    <>
+      <CreateBidModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onCreate={handleCreate}
+      />
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-sm text-muted">共 {bids.length} 个投标方案</span>
+          <button
+            onClick={() => setModalOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1 bg-success hover:bg-success-hover text-white text-xs rounded font-medium transition-colors"
+          >
+            <Plus className="w-3 h-3" />
+            新建投标版本
+          </button>
         </div>
-      ) : (
-        <div className="space-y-2">
-          {bids.map((bid) => (
-            <div
-              key={bid.id}
-              className="flex items-center justify-between p-3 border rounded-lg bg-white hover:border-accent cursor-pointer transition-colors"
-              onClick={() => router.push(`/bids/${bid.id}`)}
-            >
-              <span className="font-medium text-fg text-sm">{bid.name}</span>
-              <div className="flex items-center gap-3">
-                <span className="text-xs text-muted">
-                  {bid.currency} {Number(bid.totalBidPrice).toLocaleString()}
-                </span>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
-                  {BID_STATUS_LABEL[bid.status] ?? bid.status}
-                </span>
-                <button
-                  onClick={(e) => deleteBid(e, bid.id)}
-                  disabled={deletingId === bid.id}
-                  className="p-1 text-muted hover:text-red-500 transition-colors disabled:opacity-50"
-                  title="删除投标方案"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
+        {bids.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-sm text-muted mb-2">暂无投标方案</p>
+            <p className="text-xs text-muted">点击「新建投标版本」开始编制标书</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {bids.map((bid) => (
+              <div
+                key={bid.id}
+                className="flex items-center justify-between p-3 border rounded-lg bg-white hover:border-accent cursor-pointer transition-colors"
+                onClick={() => router.push(`/bids/${bid.id}`)}
+              >
+                <span className="font-medium text-fg text-sm">{bid.name}</span>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-muted">
+                    {bid.currency} {Number(bid.totalBidPrice).toLocaleString()}
+                  </span>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
+                    {BID_STATUS_LABEL[bid.status] ?? bid.status}
+                  </span>
+                  <button
+                    onClick={(e) => deleteBid(e, bid.id)}
+                    disabled={deletingId === bid.id}
+                    className="p-1 text-muted hover:text-red-500 transition-colors disabled:opacity-50"
+                    title="删除投标方案"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </>
   )
 }
 

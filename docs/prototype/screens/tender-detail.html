@@ -229,7 +229,7 @@ a:hover{text-decoration:underline;}
 
             <div class="tab-pane" id="tab-bids" style="padding:16px;">
               <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
-                <a href="bid-workspace.html" class="btn btn-primary btn-sm">+ 新建投标版本</a>
+                <button class="btn btn-primary btn-sm" onclick="openNewBidModal()">+ 新建投标版本</button>
               </div>
               <div class="bid-card">
                 <div>
@@ -331,14 +331,34 @@ a:hover{text-decoration:underline;}
   </div>
 </div>
 
-<!-- Decide modal -->
+<!-- New bid modal -->
+<div id="modal-new-bid" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:var(--radius);width:440px;max-width:90vw;border:1px solid var(--border);">
+    <div style="padding:16px;border-bottom:1px solid var(--border);font-weight:600;">新建投标版本</div>
+    <div style="padding:20px 16px;">
+      <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;" for="bid-name-input">投标名称 <span style="color:var(--danger)">*</span></label>
+      <input id="bid-name-input" type="text" placeholder="例如：A 方案 — 标准配置"
+        style="width:100%;padding:5px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:14px;font-family:var(--font);outline:none;"
+        onfocus="this.style.borderColor='#0969da';this.style.boxShadow='0 0 0 3px rgba(9,105,218,0.3)'"
+        onblur="this.style.borderColor='var(--border)';this.style.boxShadow='none'"
+        onkeydown="if(event.key==='Enter')confirmNewBid()">
+      <div id="bid-name-error" style="display:none;margin-top:6px;font-size:12px;color:var(--danger);">请输入投标名称</div>
+    </div>
+    <div style="padding:12px 16px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;">
+      <button class="btn btn-default" onclick="closeNewBidModal()">取消</button>
+      <button class="btn btn-primary" onclick="confirmNewBid()">创建并进入工作台</button>
+    </div>
+  </div>
+</div>
+
+
 <div id="modal-decide" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;align-items:center;justify-content:center;">
   <div style="background:#fff;border-radius:var(--radius);width:440px;max-width:90vw;border:1px solid var(--border);">
     <div style="padding:16px;border-bottom:1px solid var(--border);font-weight:600;">确认决定投标</div>
     <div style="padding:16px;font-size:13px;color:var(--muted);">将项目状态更新为「决定投标」，并可立即创建投标版本。确认继续？</div>
     <div style="padding:12px 16px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;">
       <button class="btn btn-default" onclick="closeModal()">取消</button>
-      <a href="bid-workspace.html" class="btn btn-primary">确认并创建投标</a>
+      <button class="btn btn-primary" onclick="openNewBidModal()">确认并创建投标</button>
     </div>
   </div>
 </div>
@@ -350,6 +370,27 @@ function switchTab(btn, id) {
   btn.classList.add('active');
   document.getElementById(id).classList.add('active');
 }
+function openNewBidModal() {
+  document.getElementById('modal-decide').style.display = 'none';
+  document.getElementById('bid-name-input').value = '';
+  document.getElementById('bid-name-error').style.display = 'none';
+  document.getElementById('modal-new-bid').style.display = 'flex';
+  setTimeout(() => document.getElementById('bid-name-input').focus(), 50);
+}
+function closeNewBidModal() {
+  document.getElementById('modal-new-bid').style.display = 'none';
+}
+function confirmNewBid() {
+  const name = document.getElementById('bid-name-input').value.trim();
+  if (!name) {
+    document.getElementById('bid-name-error').style.display = 'block';
+    document.getElementById('bid-name-input').focus();
+    return;
+  }
+  // Pass bid name via URL param
+  window.location.href = 'bid-workspace.html?name=' + encodeURIComponent(name);
+}
+
 function decideModal() {
   const m = document.getElementById('modal-decide');
   m.style.display = 'flex';
