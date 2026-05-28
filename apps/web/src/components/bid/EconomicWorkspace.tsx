@@ -37,6 +37,31 @@ export function EconomicWorkspace({ bidId }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
 
+  // 自定义提示词弹窗
+  const [pendingFile, setPendingFile] = useState<File | null>(null)
+  const [promptModalOpen, setPromptModalOpen] = useState(false)
+  const [customPrompt, setCustomPrompt] = useState('')
+
+  function handleFileSelected(file: File) {
+    setPendingFile(file)
+    setCustomPrompt('')
+    setPromptModalOpen(true)
+    // reset input value so same file can be re-selected
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  async function handlePromptConfirm() {
+    if (!pendingFile) return
+    setPromptModalOpen(false)
+    await uploadFile(pendingFile, customPrompt.trim() || undefined)
+    setPendingFile(null)
+  }
+
+  function handlePromptCancel() {
+    setPromptModalOpen(false)
+    setPendingFile(null)
+  }
+
   const loadItems = useCallback((docId?: string) => {
     bidApi.getBidItems(bidId, docId)
       .then(setManualItems)
@@ -141,7 +166,7 @@ export function EconomicWorkspace({ bidId }: Props) {
             type="file"
             accept="application/pdf"
             className="hidden"
-            onChange={(e) => { const f = e.target.files?.[0]; if (f) void uploadFile(f) }}
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileSelected(f) }}
           />
         </div>
       </div>
@@ -221,6 +246,47 @@ export function EconomicWorkspace({ bidId }: Props) {
           </div>
         </div>
       </div>
+
+      {/* 自定义提示词弹窗 */}
+      {promptModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+          onClick={handlePromptCancel}
+        >
+          <div
+            className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6"
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void handlePromptConfirm() } else if (e.key === 'Escape') handlePromptCancel() }}
+          >
+            <h2 className="text-base font-semibold text-gray-900 mb-1">AI 解析提示词（可选）</h2>
+            <p className="text-xs text-gray-500 mb-4">
+              输入对图纸的补充说明，帮助 AI 更准确地提取工程量清单。例如：「本图纸为客厅区域，单位为平方米」
+            </p>
+            <textarea
+              autoFocus
+              rows={4}
+              value={customPrompt}
+              onChange={(e) => setCustomPrompt(e.target.value)}
+              placeholder="（留空则使用默认提示词）"
+              className="w-full border rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <div className="flex justify-end gap-2 mt-4">
+              <button
+                onClick={handlePromptCancel}
+                className="px-4 py-1.5 text-sm text-gray-600 hover:text-gray-900 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+              >
+                取消
+              </button>
+              <button
+                onClick={() => void handlePromptConfirm()}
+                className="px-4 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              >
+                开始解析
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

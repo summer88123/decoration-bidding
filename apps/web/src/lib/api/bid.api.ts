@@ -91,9 +91,10 @@ export interface BidStatusLogData {
 
 // ─── 旧版 API（兼容现有 useBidDocument hook）──────────────────
 export const bidApi = {
-  uploadDrawing: async (bidId: string, file: File): Promise<UploadResult> => {
+  uploadDrawing: async (bidId: string, file: File, customPrompt?: string): Promise<UploadResult> => {
     const formData = new FormData()
     formData.append('file', file)
+    if (customPrompt?.trim()) formData.append('customPrompt', customPrompt.trim())
     const res = await apiClient.post<{ data: UploadResult }>(
       `/api/bids/${bidId}/documents`,
       formData,

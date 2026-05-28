@@ -87,12 +87,12 @@ export function useBidDocument(bidId: string, initialDocumentId?: string) {
   )
 
   const uploadFile = useCallback(
-    async (file: File) => {
+    async (file: File, customPrompt?: string) => {
       closeSSE()
       setLocalFileUrl(URL.createObjectURL(file))
       setState({ uploading: true, processing: false, completed: false, failed: false, items: [] })
       try {
-        const { documentId } = await bidApi.uploadDrawing(bidId, file)
+        const { documentId } = await bidApi.uploadDrawing(bidId, file, customPrompt)
         setState((s) => ({ ...s, uploading: false, processing: true, documentId, progressMessage: '正在上传...' }))
         connectSSE(documentId)
       } catch (err) {

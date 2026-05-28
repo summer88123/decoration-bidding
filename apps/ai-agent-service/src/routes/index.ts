@@ -16,13 +16,13 @@ export const routes: FastifyPluginAsync = async (app) => {
   app.get('/', async () => ({ message: 'AI 智能体服务运行中' }))
 
   // POST /ai/skills/parse-drawing — 非流式（完整等待后返回）
-  app.post<{ Body: { pages: ParsedPage[]; userEmail?: string } }>(
+  app.post<{ Body: { pages: ParsedPage[]; userEmail?: string; customPrompt?: string } }>(
     '/skills/parse-drawing',
     async (req, reply) => {
-      const { pages, userEmail } = req.body
+      const { pages, userEmail, customPrompt } = req.body
       if (!pages?.length) return reply.status(400).send(fail('NO_PAGES', '请提供图纸页面数据'))
       try {
-        const items = await parseDrawing(pages, randomUUID(), userEmail)
+        const items = await parseDrawing(pages, randomUUID(), userEmail, customPrompt)
         return reply.send(ok({ items }))
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err)
@@ -34,10 +34,10 @@ export const routes: FastifyPluginAsync = async (app) => {
   )
 
   // POST /ai/skills/parse-drawing/stream — 流式 SSE，逐条返回 BOQ 条目
-  app.post<{ Body: { pages: ParsedPage[]; userEmail?: string } }>(
+  app.post<{ Body: { pages: ParsedPage[]; userEmail?: string; customPrompt?: string } }>(
     '/skills/parse-drawing/stream',
     (req, reply) => {
-      const { pages, userEmail } = req.body as { pages: ParsedPage[]; userEmail?: string }
+      const { pages, userEmail, customPrompt } = req.body as { pages: ParsedPage[]; userEmail?: string; customPrompt?: string }
       if (!pages?.length) {
         reply.status(400).send(fail('NO_PAGES', '请提供图纸页面数据'))
         return
@@ -61,7 +61,7 @@ export const routes: FastifyPluginAsync = async (app) => {
       void (async () => {
         try {
           let count = 0
-          for await (const ev of streamItems(pages, traceId, userEmail)) {
+          for await (const ev of streamItems(pages, traceId, userEmail, customPrompt)) {
             if (ev.kind === 'progress') {
               send({ type: 'page_progress', page: ev.page, total: ev.total })
               req.log.info(`[parse-drawing/stream] 开始第 ${ev.page}/${ev.total} 页`)

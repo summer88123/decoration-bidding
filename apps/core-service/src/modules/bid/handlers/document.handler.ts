@@ -13,6 +13,10 @@ export function createDocumentHandlers(svc: DocumentService) {
       if (!data) return reply.status(400).send(fail('NO_FILE', '请上传 PDF 文件'))
       const buffer = await data.toBuffer()
 
+      // 读取自定义提示词（multipart field）
+      const fields = (data as unknown as { fields?: Record<string, { value?: string }> }).fields
+      const customPrompt = fields?.customPrompt?.value?.trim() || undefined
+
       // 查询当前登录用户邮箱，用于 Langfuse userId 追踪
       const authUser = (req as unknown as { authUser?: { userId: string } }).authUser
       let userEmail: string | undefined
@@ -21,7 +25,7 @@ export function createDocumentHandlers(svc: DocumentService) {
         userEmail = user?.email ?? undefined
       }
 
-      const result = await svc.uploadAndProcess(req.params.bidId, buffer, data.filename, userEmail)
+      const result = await svc.uploadAndProcess(req.params.bidId, buffer, data.filename, userEmail, customPrompt)
       return reply.status(202).send(ok(result))
     },
 

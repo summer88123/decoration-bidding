@@ -124,6 +124,7 @@ async function* processPageStream(
   pageIndex: number,
   totalPages: number,
   userEmail?: string,
+  customPrompt?: string,
 ): AsyncGenerator<BidItemFromAI> {
   const label = `第 ${page.pageNum}/${totalPages} 页`
   logger.info({ pageNum: page.pageNum, traceId }, `开始解析 ${label}`)
@@ -140,6 +141,10 @@ async function* processPageStream(
     },
   })
 
+  const effectiveSystem = customPrompt?.trim()
+    ? `${SYSTEM_PROMPT}\n\n用户补充说明：\n${customPrompt.trim()}`
+    : SYSTEM_PROMPT
+
   try {
     // ── 优先尝试 streamObject（需 thinking 已关闭） ──
     const stream = await streamObject({
@@ -147,7 +152,7 @@ async function* processPageStream(
       schema: ResponseSchema,
       // mode: 'json',
       temperature: 1,
-      system: SYSTEM_PROMPT,
+      system: effectiveSystem,
       messages: buildPageMessages(page),
       ...thinkingOpts(),
       // OTel 通道：启用 Vercel AI SDK 内置 telemetry，自动被 LangfuseSpanProcessor 捕获
@@ -215,7 +220,7 @@ async function* processPageStream(
         schema: ResponseSchema,
         mode: 'json',
         temperature: 1,
-        system: SYSTEM_PROMPT,
+        system: effectiveSystem,
         messages: buildPageMessages(page),
         ...thinkingOpts(),
         // OTel 通道：降级路径同样启用 telemetry
@@ -262,6 +267,7 @@ export async function execute(
   pages: ParsedPage[],
   traceId?: string,
   userEmail?: string,
+  customPrompt?: string,
 ): Promise<BidItemFromAI[]> {
   logger.info({ pages: pages.length, traceId, userEmail }, '开始非流式解析（逐页模式）')
   langfuse?.trace({
@@ -273,7 +279,7 @@ export async function execute(
 
   const allItems: BidItemFromAI[] = []
   for (let i = 0; i < pages.length; i++) {
-    for await (const item of processPageStream(pages[i], traceId, i, pages.length, userEmail)) {
+    for await (const item of processPageStream(pages[i], traceId, i, pages.length, userEmail, customPrompt)) {
       allItems.push(item)
     }
   }
@@ -295,6 +301,7 @@ export async function* streamItems(
   pages: ParsedPage[],
   traceId?: string,
   userEmail?: string,
+  customPrompt?: string,
 ): AsyncGenerator<StreamYield> {
   logger.info({ pages: pages.length, traceId, userEmail }, '开始流式解析（逐页逐条模式）')
   langfuse?.trace({
@@ -307,7 +314,7 @@ export async function* streamItems(
   let totalItems = 0
   for (let i = 0; i < pages.length; i++) {
     yield { kind: 'progress', page: pages[i].pageNum, total: pages.length }
-    for await (const item of processPageStream(pages[i], traceId, i, pages.length, userEmail)) {
+    for await (const item of processPageStream(pages[i], traceId, i, pages.length, userEmail, customPrompt)) {
       yield { kind: 'item', data: item }
       totalItems++
     }
