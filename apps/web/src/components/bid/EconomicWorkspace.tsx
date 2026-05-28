@@ -29,7 +29,7 @@ export function EconomicWorkspace({ bidId }: Props) {
   const searchParams = useSearchParams()
   const documentId = searchParams.get('documentId') ?? undefined
 
-  const { state, localFileUrl, uploadFile, lastDocument } = useBidDocument(bidId)
+  const { state, localFileUrl, uploadFile, lastDocument } = useBidDocument(bidId, documentId)
   const [manualItems, setManualItems] = useState<BidItemData[]>([])
   const [selectedItem, setSelectedItem] = useState<BidItemData | null>(null)
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
@@ -43,6 +43,7 @@ export function EconomicWorkspace({ bidId }: Props) {
       .catch(() => {})
   }, [bidId])
 
+  // documentId 变化时同步 fileUrl（用于 PDF 预览），条目由 useBidDocument hook 的 state.items 驱动
   useEffect(() => {
     if (documentId) {
       bidApi.listDocuments(bidId)
@@ -51,38 +52,33 @@ export function EconomicWorkspace({ bidId }: Props) {
           if (doc) setSelectedFileUrl(doc.fileUrl)
         })
         .catch(() => {})
-      loadItems(documentId)
-    } else {
-      bidApi.listDocuments(bidId)
-        .then((docs) => {
-          const defaultDoc = docs.find((d) => d.status === 'completed')
-          if (defaultDoc) setSelectedFileUrl(defaultDoc.fileUrl)
-          loadItems(undefined)
-        })
-        .catch(() => { loadItems() })
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bidId, documentId])
 
+  // hook 的初始加载或 SSE 解析完成后，从 DB 拉取最终条目到 manualItems
   useEffect(() => {
-    if (state.completed && lastDocument) {
-      setSelectedFileUrl(lastDocument.fileUrl)
-      loadItems(lastDocument.id)
+    if (state.completed) {
+      // 用 lastDocument.id（若有）确保拉到正确文档的条目；无则按 documentId 参数
+      const docId = lastDocument?.id ?? documentId
+      loadItems(docId)
+      if (lastDocument) setSelectedFileUrl(lastDocument.fileUrl)
     }
-  }, [state.completed, lastDocument, loadItems])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.completed, lastDocument])
 
-  const displayItems = state.items.length > 0 ? state.items : manualItems
+  // SSE 进行中展示流式条目；其他时间展示 manualItems（来自 DB）
+  const displayItems = state.processing ? state.items : manualItems
 
   async function handleAddItem() {
     try {
-      const res = await bidApi.createItem(bidId, {
+      await bidApi.createItem(bidId, {
         itemName: '新条目',
         quantity: 1,
         unit: '项',
         costPrice: 0,
         sellPrice: 0,
       })
-      setManualItems((prev) => [...prev, res.data.data])
+      loadItems(documentId)
     } catch {
       toast({ title: '添加失败', variant: 'destructive' })
     }
@@ -100,7 +96,7 @@ export function EconomicWorkspace({ bidId }: Props) {
   async function handleDeleteItem(itemId: string) {
     try {
       await bidApi.deleteItem(bidId, itemId)
-      setManualItems((prev) => prev.filter((i) => i.id !== itemId))
+      loadItems(documentId)
     } catch {
       toast({ title: '删除失败', variant: 'destructive' })
     }

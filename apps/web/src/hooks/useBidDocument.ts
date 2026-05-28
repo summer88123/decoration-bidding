@@ -15,7 +15,7 @@ export interface UseBidDocumentState {
   items: BidItemData[]
 }
 
-export function useBidDocument(bidId: string) {
+export function useBidDocument(bidId: string, initialDocumentId?: string) {
   const [state, setState] = useState<UseBidDocumentState>({
     uploading: false, processing: false, completed: false, failed: false, items: [],
   })
@@ -103,22 +103,26 @@ export function useBidDocument(bidId: string) {
     [bidId, connectSSE, closeSSE],
   )
 
-  // mount 时拉取文档列表，若存在 completed 文档则回显
+  // mount 时拉取文档列表，若存在 completed 文档则回显（优先使用指定的 documentId）
   useEffect(() => {
     let cancelled = false
     bidApi.listDocuments(bidId).then((docs) => {
       if (cancelled) return
-      const completed = docs.find((d) => d.status === 'completed')
-      if (!completed) return
-      setLastDocument(completed)
-      setLocalFileUrl(completed.fileUrl)
-      void bidApi.getBidItems(bidId, completed.id).then((items) => {
+      // 优先用 URL 指定的文档；否则回退到第一个 completed 文档
+      const target = initialDocumentId
+        ? docs.find((d) => d.id === initialDocumentId && d.status === 'completed')
+        : docs.find((d) => d.status === 'completed')
+      if (!target) return
+      setLastDocument(target)
+      setLocalFileUrl(target.fileUrl)
+      void bidApi.getBidItems(bidId, target.id).then((items) => {
         if (cancelled) return
         setState((s) => ({ ...s, completed: true, items }))
       })
     }).catch(() => {})
     return () => { cancelled = true }
-  }, [bidId])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bidId, initialDocumentId])
 
   return { state, localFileUrl, uploadFile, lastDocument }
 }
