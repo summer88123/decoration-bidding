@@ -32,7 +32,9 @@ const FILTER_TABS: { value: TenderStatus | 'ALL'; label: string }[] = [
 
 function formatBudget(budget?: number) {
   if (!budget) return '—'
-  return 'HK$' + budget.toLocaleString()
+  if (budget >= 1_000_000) return `HK$${(budget / 1_000_000).toFixed(1)}M`
+  if (budget >= 1_000) return `HK$${Math.round(budget / 1_000)}K`
+  return `HK$${budget}`
 }
 
 function formatDate(dateStr?: string) {
@@ -42,7 +44,7 @@ function formatDate(dateStr?: string) {
 
 function isUrgent(deadline?: string) {
   if (!deadline) return false
-  return new Date(deadline).getTime() - Date.now() < 14 * 86400 * 1000
+  return new Date(deadline).getTime() - Date.now() < 7 * 86400 * 1000
 }
 
 export default function TendersPage() {
@@ -52,7 +54,7 @@ export default function TendersPage() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<TenderStatus | 'ALL'>('ALL')
   const [search, setSearch] = useState('')
-  const [sortBy, setSortBy] = useState<'deadline-asc' | 'deadline-desc' | 'createdAt'>('deadline-asc')
+  const [sortBy, setSortBy] = useState<'asc' | 'desc'>('asc')
   const [page, setPage] = useState(1)
   const pageSize = 20
 
@@ -64,8 +66,8 @@ export default function TendersPage() {
         pageSize,
         status: activeTab === 'ALL' ? undefined : activeTab,
         search: search || undefined,
-        sortBy: sortBy === 'createdAt' ? 'createdAt' : 'deadline',
-        sortOrder: sortBy === 'deadline-desc' ? 'desc' : 'asc',
+        sortBy: 'deadline',
+        sortOrder: sortBy === 'desc' ? 'desc' : 'asc',
       })
       setTenders(res.data)
       setTotal(res.pagination.total)
@@ -105,7 +107,7 @@ export default function TendersPage() {
             placeholder="搜索项目名称、业主…"
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-            className="flex-1 min-w-[200px] max-w-xs"
+            className="w-[240px]"
           />
           <div className="flex gap-0.5">
             {FILTER_TABS.map((tab) => (
@@ -122,15 +124,16 @@ export default function TendersPage() {
               </button>
             ))}
           </div>
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-            className="px-3 py-[5px] text-xs border border-border rounded-[6px] bg-surface text-fg cursor-pointer focus:outline-none focus:border-accent focus:ring-[3px] focus:ring-accent/20"
+          <button
+            onClick={() => setSortBy((s) => (s === 'asc' ? 'desc' : 'asc'))}
+            className="ml-auto flex items-center gap-1 px-[10px] py-[5px] border border-border rounded-[6px] text-xs text-muted bg-bg hover:bg-surface transition-colors"
           >
-            <option value="deadline-asc">截标日期 ↑</option>
-            <option value="deadline-desc">截标日期 ↓</option>
-            <option value="createdAt">创建时间</option>
-          </select>
+            截标日期
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"
+              className={`transition-transform ${sortBy === 'desc' ? 'rotate-180' : ''}`}>
+              <path d="M4.427 7.427l3.396 3.396a.25.25 0 00.354 0l3.396-3.396A.25.25 0 0011.396 7H4.604a.25.25 0 00-.177.427z"/>
+            </svg>
+          </button>
         </div>
 
         {/* Table */}
@@ -138,12 +141,12 @@ export default function TendersPage() {
           <table className="w-full border-collapse text-[13px]">
             <thead>
               <tr className="bg-surface border-b border-border">
-                <th className="px-4 py-2.5 text-left font-semibold text-fg">项目名称</th>
-                <th className="px-4 py-2.5 text-left font-semibold text-fg">业主 / 甲方</th>
-                <th className="px-4 py-2.5 text-left font-semibold text-fg">截标日期</th>
-                <th className="px-4 py-2.5 text-right font-semibold text-fg">预算估算</th>
-                <th className="px-4 py-2.5 text-left font-semibold text-fg">状态</th>
-                <th className="px-4 py-2.5 text-left font-semibold text-fg">操作</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold text-muted whitespace-nowrap">项目名称</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold text-muted whitespace-nowrap">业主 / 甲方</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold text-muted whitespace-nowrap">截标日期</th>
+                <th className="px-4 py-2.5 text-right text-xs font-semibold text-muted whitespace-nowrap">预算估算</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold text-muted">状态</th>
+                <th className="px-4 py-2.5 text-right text-xs font-semibold text-muted">操作</th>
               </tr>
             </thead>
             <tbody>
@@ -198,7 +201,7 @@ export default function TendersPage() {
                           {s.label}
                         </Badge>
                       </td>
-                      <td className="px-4 py-2.5">
+                      <td className="px-4 py-2.5 text-right">
                         <a
                           href={`/tenders/${t.id}`}
                           className="inline-flex items-center px-3 py-[3px] text-xs border border-border rounded-[6px] bg-surface hover:bg-inset transition-colors"
@@ -254,6 +257,10 @@ export default function TendersPage() {
             </div>
           )}
         </div>
+        {/* Footer: record count (when no pagination) */}
+        {!loading && totalPages <= 1 && (
+          <div className="pt-2.5 text-xs text-muted">共 {total} 条记录</div>
+        )}
       </main>
     </div>
   )

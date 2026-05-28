@@ -1,12 +1,41 @@
 # 原型 vs 实现 — 数据层差异记录
 
-> 最后更新：2026-05-25
+> 最后更新：2026-05-28
 
 本文档记录原型设计中展示的功能/字段，但当前数据模型或 API 尚不支持的部分。
 纯 UI 样式差异不在此列，请查看源代码注释。
 
 **原型文件位置：** `docs/prototype/screens/`
 **用户故事位置：** `docs/story/`
+
+---
+
+## 零、本次 tenders 页对比更新记录（2026-05-28）
+
+### 0.1 已完成的 UI 对齐（纯前端）
+
+| 改动 | 文件 | 说明 |
+|------|------|------|
+| 表头颜色 `text-fg` → `text-muted` | `tenders/page.tsx` | 与原型表头样式一致 |
+| "操作"列改为右对齐 | `tenders/page.tsx` | 原型中操作列右对齐 |
+| 预算格式缩写（M/K） | `tenders/page.tsx` | 原型显示 `HK$3.2M` 而非完整数字 |
+| 紧急截标阈值 14天 → 7天 | `tenders/page.tsx` | 与原型逻辑一致 |
+| 排序改为切换按钮 | `tenders/page.tsx` | 原型为"截标日期↑↓"切换按钮，而非 select |
+| 记录数移至表格外侧 | `tenders/page.tsx` | 原型中 footer 在表格外部 |
+| 信息卡标题 "基本信息" → "项目信息" | `tenders/[id]/page.tsx` | 原型卡片标题为"项目信息" |
+| 信息网格 2列 → 3列，字段顺序调整 | `tenders/[id]/page.tsx` | 原型为3列：截标日期/预算/来源/地点/业主/AI评分 |
+| 标签页"文件"→"招标文件"，"投标方案"→"投标版本" | `tenders/[id]/page.tsx` | 与原型标签名称一致 |
+| 页面标题区域增加"决定投标"按钮（PENDING状态） | `tenders/[id]/page.tsx` | 原型在标题右侧有编辑+决定投标两个按钮 |
+| 状态流转步骤标签调整 | `tenders/[id]/page.tsx` | 与原型显示"决定投标 → 投标中"等复合标签一致 |
+
+### 0.2 需要后端支持的差异（未实现）
+
+| 功能/字段 | 原型来源 | 所需变更 | 优先级 |
+|-----------|----------|----------|--------|
+| `notes`/备注字段 | `tender-detail.html` 信息卡底部有备注区块 | `TenderProject` 新增 `notes String?` 字段 + API | 中 |
+| 信息卡3列显示"负责人" | `tender-detail.html`：info-grid 第6格显示负责人姓名 | `assigneeId` 外键 + 关联用户表查询（见下方第一节） | 中 |
+| 招标文件列表（多文件） | `tender-detail.html`：文件行显示图标/名称/大小/日期/下载按钮 | 需 `TenderDocument` 表（见下方第三节） | 高 |
+| 文件类型图标（PDF/DWG等） | 文件行左侧有颜色化文件类型图标 | 依赖 `TenderDocument.fileType` 字段 | 低 |
 
 ---
 
@@ -268,6 +297,25 @@ model AuditLog {
 | 中标率 | `WON / (WON + LOST) * 100` | ❌ 无聚合端点 |
 
 **需新增端点：** `GET /api/tenders/stats`
+
+---
+
+## 七、投标工作台列表接口缺失（bids/page.tsx）
+
+原型 `bids.html` 展示**所有**投标方案列表（跨 Tender），但后端仅有：
+
+- `GET /api/tenders/:tenderId/bids` — 按 Tender 查询该 Tender 下的投标列表
+
+**缺失端点：**
+
+| 端点 | 描述 | 优先级 |
+|------|------|--------|
+| `GET /api/bids` | 返回当前公司所有 Bid（支持 `status`/`search`/`page` 过滤） | 高 |
+
+**当前前端 Workaround（`/bids/page.tsx`）：**  
+先调 `GET /api/tenders?pageSize=200` 获取全量 Tender 列表，再用 `Promise.allSettled` 并发请求每个 Tender 的 bids，最终合并展示。
+
+**副作用：** 当 Tender 数量较多时，会发起大量并发请求。建议后端尽快补充 `GET /api/bids`。
 
 ---
 

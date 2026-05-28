@@ -171,9 +171,9 @@ function EditForm({
 
 const STATUS_STEPS = [
   { status: 'PENDING', label: '待决策' },
-  { status: 'BIDDING', label: '投标中' },
-  { status: 'SUBMITTED', label: '已提交' },
-  { status: 'result', label: '结果待定' },
+  { status: 'BIDDING', label: '决定投标 → 投标中' },
+  { status: 'SUBMITTED', label: '已提交 → 结果待定' },
+  { status: 'result', label: '已出结果' },
 ]
 
 function StatusFlow({
@@ -502,6 +502,17 @@ export default function TenderDetailPage() {
                 编辑信息
               </button>
             )}
+            {tender.status === 'PENDING' && !editing && (
+              <Button
+                variant="primary"
+                size="md"
+                onClick={handleDecide}
+                disabled={deciding}
+              >
+                {deciding ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+                决定投标
+              </Button>
+            )}
           </div>
         </div>
 
@@ -512,20 +523,22 @@ export default function TenderDetailPage() {
             {/* Info card / Edit form */}
             <div className="border border-border rounded-[6px]">
               <div className="px-4 py-3 border-b border-border bg-surface rounded-t-[6px] flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-fg">基本信息</h2>
+                <h2 className="text-sm font-semibold text-fg">项目信息</h2>
               </div>
               <div className="px-4 py-4">
                 {editing ? (
                   <EditForm tender={tender} onSave={handleSave} onCancel={() => setEditing(false)} />
                 ) : (
-                  <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-                    <InfoItem label="业主 / 甲方">{tender.clientName || '—'}</InfoItem>
-                    <InfoItem label="项目地点">{tender.location || '—'}</InfoItem>
+                  <div className="grid grid-cols-3 gap-x-8 gap-y-4">
+                    <InfoItem label="截标日期">
+                      <span className={tender.deadline && new Date(tender.deadline).getTime() - Date.now() < 7 * 86400_000 ? 'text-danger' : ''}>
+                        {tender.deadline?.slice(0, 10) || '—'}
+                      </span>
+                    </InfoItem>
                     <InfoItem label="预算估算">
                       {tender.budgetEstimate ? `HK$ ${Number(tender.budgetEstimate).toLocaleString()}` : '—'}
                     </InfoItem>
-                    <InfoItem label="截标日期">{tender.deadline?.slice(0, 10) || '—'}</InfoItem>
-                    <InfoItem label="来源网址">
+                    <InfoItem label="招标来源">
                       {tender.sourceUrl ? (
                         <a href={tender.sourceUrl} target="_blank" rel="noreferrer"
                           className="text-accent hover:underline inline-flex items-center gap-1">
@@ -533,6 +546,8 @@ export default function TenderDetailPage() {
                         </a>
                       ) : '—'}
                     </InfoItem>
+                    <InfoItem label="项目地点">{tender.location || '—'}</InfoItem>
+                    <InfoItem label="业主 / 甲方">{tender.clientName || '—'}</InfoItem>
                     <InfoItem label="AI 评分">
                       <span className="text-muted text-xs">（评估中...）</span>
                     </InfoItem>
@@ -546,8 +561,8 @@ export default function TenderDetailPage() {
               {/* Tab nav */}
               <div className="flex border-b border-border bg-surface rounded-t-[6px] overflow-x-auto">
                 {([
-                  { id: 'docs',    label: '文件' },
-                  { id: 'bids',    label: '投标方案' },
+                 { id: 'docs',    label: '招标文件' },
+                  { id: 'bids',    label: '投标版本' },
                   { id: 'history', label: '操作记录' },
                 ] as { id: TabId; label: string }[]).map((tab) => (
                   <button
