@@ -53,9 +53,9 @@ export class DocumentService {
     await BidDocumentRepository.updateStatus(docId, 'processing', { pageCount: pages.length })
     emitDocEvent(docId, { type: 'progress', message: `PDF 解析完成，共 ${pages.length} 页，正在 AI 分析...` })
 
-    // Step 2: 清除该 bid 旧条目（重新解析时避免数据遗留）
-    const deleted = await BidItemRepository.deleteByBidId(bidId)
-    logger.info({ docId, bidId, deleted: deleted.count }, '已清除旧 BOQ 条目')
+    // Step 2: 清除本文档旧条目（只清自己，不影响其他文档的条目）
+    const deleted = await BidItemRepository.deleteByDocumentId(docId)
+    logger.info({ docId, bidId, deleted: deleted.count }, '已清除本文档旧 BOQ 条目')
 
     // Step 3: AI 分析图纸（流式接收条目）
     logger.info({ docId }, '开始 AI 分析，调用 ai-agent 流式端点')

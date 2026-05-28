@@ -6,13 +6,21 @@ import type { BidItemFromAI } from '@decoration-bidding/shared-types'
 const logger = createLogger('bid-item-repository')
 
 export const BidItemRepository = {
-  findByBidId(bidId: string) {
-    return prisma.bidItem.findMany({ where: { bidId }, orderBy: { sortOrder: 'asc' } })
+  findByBidId(bidId: string, documentId?: string) {
+    return prisma.bidItem.findMany({
+      where: { bidId, ...(documentId ? { documentId } : {}) },
+      orderBy: { sortOrder: 'asc' },
+    })
   },
 
   /** 删除该 bid 下所有条目（重新解析前调用） */
   deleteByBidId(bidId: string) {
     return prisma.bidItem.deleteMany({ where: { bidId } })
+  },
+
+  /** 删除指定文档的条目（多文档模式下重新解析单个文档时调用） */
+  deleteByDocumentId(documentId: string) {
+    return prisma.bidItem.deleteMany({ where: { documentId } })
   },
 
   createManyFromAI(bidId: string, documentId: string, items: BidItemFromAI[]) {

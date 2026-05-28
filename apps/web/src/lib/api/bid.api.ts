@@ -109,9 +109,11 @@ export const bidApi = {
     return res.data.data
   },
 
-  getBidItems: async (bidId: string): Promise<BidItemData[]> => {
+  getBidItems: async (bidId: string, documentId?: string): Promise<BidItemData[]> => {
+    const params = documentId ? { documentId } : {}
     const res = await apiClient.get<{ success: boolean; data: BidItemData[] }>(
       `/api/bids/${bidId}/items`,
+      { params },
     )
     return res.data.data
   },
@@ -158,8 +160,10 @@ export const bidApi = {
   },
 
   // ── 经济标条目 ───────────────────────────────────────────────
-  listItems: (bidId: string) =>
-    apiClient.get(`/api/bids/${bidId}/items`),
+  listItems: (bidId: string, documentId?: string) => {
+    const params = documentId ? { documentId } : {}
+    return apiClient.get(`/api/bids/${bidId}/items`, { params })
+  },
 
   createItem: (bidId: string, data: Partial<BidItemData>) =>
     apiClient.post(`/api/bids/${bidId}/items`, data),

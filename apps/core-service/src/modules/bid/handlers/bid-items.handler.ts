@@ -1,6 +1,7 @@
 // apps/core-service/src/modules/bid/handlers/bid-items.handler.ts
 import type { FastifyRequest, FastifyReply } from 'fastify'
 import { bidService } from '../services/bid.service.js'
+import { BidItemRepository } from '../repositories/bid-item.repository.js'
 import {
   CreateBidItemSchema,
   UpdateBidItemSchema,
@@ -10,12 +11,14 @@ import {
 export function createBidItemsHandlers() {
   return {
     async list(
-      req: FastifyRequest<{ Params: { bidId: string } }>,
+      req: FastifyRequest<{ Params: { bidId: string }; Querystring: { documentId?: string } }>,
       reply: FastifyReply,
     ) {
       const user = req.authUser
-      const bid = await bidService.getBid(req.params.bidId, user.companyId)
-      return reply.send({ success: true, data: bid.bidItems })
+      // 权限校验：确认该 bid 属于当前公司
+      await bidService.getBid(req.params.bidId, user.companyId)
+      const items = await BidItemRepository.findByBidId(req.params.bidId, req.query.documentId)
+      return reply.send({ success: true, data: items })
     },
 
     async create(

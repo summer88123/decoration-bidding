@@ -50,8 +50,13 @@ export function useBidDocument(bidId: string) {
           setState((s) => ({ ...s, items: [...s.items, item] }))
         } else if (event.type === 'done') {
           // 解析完成：重新拉取最终条目列表（包含数据库 id 等字段）
-          void bidApi.getBidItems(bidId).then((items) => {
+          void bidApi.getBidItems(bidId, docId).then((items) => {
             setState((s) => ({ ...s, processing: false, completed: true, items, progressMessage: undefined }))
+          })
+          // 刷新 lastDocument，让 EconomicWorkspace 感知到最新文档
+          void bidApi.listDocuments(bidId).then((docs) => {
+            const doc = docs.find((d) => d.id === docId)
+            if (doc) setLastDocument(doc)
           })
           closeSSE()
         } else if (event.type === 'error') {
@@ -67,7 +72,7 @@ export function useBidDocument(bidId: string) {
         closeSSE()
         void bidApi.getDocumentStatus(bidId, docId).then((status) => {
           if (status.status === 'completed') {
-            void bidApi.getBidItems(bidId).then((items) => {
+            void bidApi.getBidItems(bidId, docId).then((items) => {
               setState((s) => ({ ...s, processing: false, completed: true, items }))
             })
           } else if (status.status === 'failed') {
@@ -107,7 +112,7 @@ export function useBidDocument(bidId: string) {
       if (!completed) return
       setLastDocument(completed)
       setLocalFileUrl(completed.fileUrl)
-      void bidApi.getBidItems(bidId).then((items) => {
+      void bidApi.getBidItems(bidId, completed.id).then((items) => {
         if (cancelled) return
         setState((s) => ({ ...s, completed: true, items }))
       })
