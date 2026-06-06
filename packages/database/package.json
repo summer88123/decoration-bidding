@@ -15,10 +15,10 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "db:generate": "prisma generate",
-    "db:migrate": "prisma migrate dev",
-    "db:push": "prisma db push",
-    "db:seed": "tsx prisma/seed.ts",
-    "db:studio": "prisma studio",
+    "db:migrate": "dotenv -e ../../.env -- prisma migrate dev",
+    "db:push": "dotenv -e ../../.env -- prisma db push",
+    "db:seed": "dotenv -e ../../.env -- tsx prisma/seed.ts",
+    "db:studio": "dotenv -e ../../.env -- prisma studio",
     "clean": "rm -rf dist"
   },
   "prisma": {
