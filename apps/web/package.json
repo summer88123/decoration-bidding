@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "clean": "rm -rf .next",
-    "copy-pdf-worker": "cp node_modules/pdfjs-dist/build/pdf.worker.min.mjs public/pdf.worker.min.mjs",
+    "copy-pdf-worker": "node scripts/copy-pdf-worker.js",
     "postinstall": "pnpm run copy-pdf-worker"
   },
   "dependencies": {
